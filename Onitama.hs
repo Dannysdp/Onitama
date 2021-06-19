@@ -25,7 +25,6 @@ d7 a d6
 -}
 
 data Tablero = Tablero [Pieza]
---crear una funcion maketable que usando onitamaGame arma el tablero
 data OnitamaCard = Tiger | Dragon | Frog | Rabbit | Crab | Elephant | Goose | Rooster | Monkey | Mantis | Horse | Ox | Crane | Boar | Eel | Cobra 
 -- aca ponemos todas las cartas (tiger,oz,dragon)
 
@@ -35,7 +34,18 @@ cartaATupla (Dragon) = [(-1,1),(-1,-1),(1,2),(1,-2)]
 cartaATupla (Frog) = [(-1,-1),(0,-2),(1,1)]
 cartaATupla (Rabbit) = [(1,-1),(-1,1)]
 cartaATupla (Crab) = [(0,-2),(-1,0),(0,2)]
-cartaATupla (Elephant) = [(-1,-1),(0,-1),(1,1)] -- sin terminar 
+cartaATupla (Elephant) = [(-1,-1),(0,-1),(1,1),(0,1)] 
+cartaATupla (Goose) = [(-1,-1),(0,-1),(1,1),(1,1)] 
+cartaATupla (Rooster) = [(1,-1),(0,-1),(1,1),(0,1)] 
+cartaATupla (Monkey) = [(-1,-1),(1,-1),(-1,1),(1,1)] 
+cartaATupla (Mantis) = [(-1,-1),(-1,1),(1,0)] 
+cartaATupla (Horse) = [(0,-1),(-1,0),(1,0)] 
+cartaATupla (Ox) = [(0,1),(-1,0),(1,0)] 
+cartaATupla (Crane) = [(1,-1),(-1,0),(1,1)] 
+cartaATupla (Boar) = [(0,-1),(-1,0),(0,1)] 
+cartaATupla (Eel) = [(-1,-1),(1,-1),(0,1)] 
+cartaATupla (Cobra) = [(1,-1),(1,1),(0,-1)] 
+
 
 data OnitamaPlayer = RedPlayer | BluePlayer deriving(Eq, Show, Enum)
 
