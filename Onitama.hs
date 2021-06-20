@@ -1,18 +1,27 @@
-data Pieza = Peon Int Int | Maestro Int Int | Vacio Int Int deriving (Eq,Show)
+data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Show)
 
 data Place = Move Int Int deriving (Eq,Show)
 
 data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] OnitamaCard OnitamaPlayer  -- tablero actual, cartas1, cartas2, carta extra y juegador
 
 data OnitamaAction = OnitamaAction (Place,Place)
--- hay que ponerle la carta q utiliza esta accion y la pieza q modifica, pero mepa q eso es "Peleable"
 
--- a1 a2 ra a3 a4 | 0,0 0,1 0,2 0,3 0,4
---  -  -  -  -  - | 1,0 1,1 1,2 1,3 1,4 
---  -  -  -  -  - | 2,0 2,1 2,2 2,3 2,4
---  -  -  -  -  - | 3,0 3,1 3,2 3,3 3,4
--- r1 r2 rr r3 r4 | 4,0 4,1 4,2 4,3 4,4
--- x = vertial y = horizontal 
+data Tablero = Tablero [Pieza]
+
+data OnitamaCard = Tiger | Dragon | Frog | Rabbit | Crab | Elephant | Goose | Rooster | Monkey | Mantis | Horse | Ox | Crane | Boar | Eel | Cobra 
+-- aca ponemos todas las cartas (tiger,oz,dragon)
+
+data OnitamaPlayer = RedPlayer | BluePlayer deriving(Eq, Show, Enum)
+
+data GameResult p = Winner p | Loser p | Draw deriving(Eq, Show)
+--                  cordenadas x y           pos lista 
+-- a1 a2 ra a3 a4 | 0,0 1,0 2,0 3,0 4,0  -> 0  1  2  3  4 
+--  -  -  -  -  - | 0,1 1,1 2,1 3,1 4,1  -> 5  6  7  8  9 
+--  -  -  -  -  - | 0,2 1,2 2,2 3,2 4,2  -> 10 11 12 13 14 
+--  -  -  -  -  - | 0,3 1,3 2,3 3,3 4,3  -> 15 16 17 18 19 
+-- r1 r2 rr r3 r4 | 0,4 1,4 2,4 3,4 4,4  -> 20 21 22 23 24 
+-- x = horizontal y = veritcal 
+-- convertir de pos lista a cordenadas = x + y*5
 {-
  [(Movimiento,Movimiento)] 
  !! 0 = (Move,Move)
@@ -23,43 +32,13 @@ data OnitamaAction = OnitamaAction (Place,Place)
  !! 5 = carta5 (Extra)
 d7 a d6
 -}
-
-data Tablero = Tablero [Pieza]
-data OnitamaCard = Tiger | Dragon | Frog | Rabbit | Crab | Elephant | Goose | Rooster | Monkey | Mantis | Horse | Ox | Crane | Boar | Eel | Cobra 
--- aca ponemos todas las cartas (tiger,oz,dragon)
-
-cartaATupla :: OnitamaCard -> [(Int,Int)]
-cartaATupla (Tiger) = [(-1,0),(2,0)] -- [(x,y)] x,y son posiciones de la matriz tablero
-cartaATupla (Dragon) = [(-1,1),(-1,-1),(1,2),(1,-2)]
-cartaATupla (Frog) = [(-1,-1),(0,-2),(1,1)]
-cartaATupla (Rabbit) = [(1,-1),(-1,1)]
-cartaATupla (Crab) = [(0,-2),(-1,0),(0,2)]
-cartaATupla (Elephant) = [(-1,-1),(0,-1),(1,1),(0,1)] 
-cartaATupla (Goose) = [(-1,-1),(0,-1),(1,1),(1,1)] 
-cartaATupla (Rooster) = [(1,-1),(0,-1),(1,1),(0,1)] 
-cartaATupla (Monkey) = [(-1,-1),(1,-1),(-1,1),(1,1)] 
-cartaATupla (Mantis) = [(-1,-1),(-1,1),(1,0)] 
-cartaATupla (Horse) = [(0,-1),(-1,0),(1,0)] 
-cartaATupla (Ox) = [(0,1),(-1,0),(1,0)] 
-cartaATupla (Crane) = [(1,-1),(-1,0),(1,1)] 
-cartaATupla (Boar) = [(0,-1),(-1,0),(0,1)] 
-cartaATupla (Eel) = [(-1,-1),(1,-1),(0,1)] 
-cartaATupla (Cobra) = [(1,-1),(1,1),(0,-1)] 
-
-
-data OnitamaPlayer = RedPlayer | BluePlayer deriving(Eq, Show, Enum)
-
-data GameResult p = Winner p | Loser p | Drawderiving(Eq, Show)
--- : El estado inicial del juego de Onitama. Esto incluye elorden en el cual están barajadas las cartas del mazo
 beginning :: [OnitamaCard] -> OnitamaGame -- yo doy barajas
-
-beginning :: OnitamaGame
-beginning = Tablero [(Pieza Vacio x y) | x <- [1..3] y <- [0..4]] ++ [(Pieza BluePlayer x y) | x <- 1 y <- [0..4]] ++ [(Pieza RedPlayer x y) | x <- 4 y <- [0..4]]
-
+-- beginning = Tablero [(Pieza Vacio x y) | x <- [1..3] y <- [0..4]] ++ [(Pieza BluePlayer x y) | x <- 1 y <- [0..4]] ++ [(Pieza RedPlayer x y) | x <- 4 y <- [0..4]]
+beginning baraja = (OnitamaGame (Tablero [Peon RedPlayer]) [Tiger] [Dragon] Cobra RedPlayer)
 --Esta función determina a cuál jugador le toca mover,dado un estado de juego.
 activePlayer :: OnitamaGame -> OnitamaPlayer
 activePlayer (OnitamaGame  _ _ _ _ jugador) = jugador
-
+{-
 --La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posiblesmovimientos para el estado de juego dado. Sino la lista debe estar vacía.
 actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
 actions tablero@(Tablero lista _) = [actionsRed] ++ [actionsBlue] where
@@ -91,3 +70,22 @@ result :: OnitamaGame -> [GameResult OnitamaPlayer]
 
 --Obtiene una acción a partir de un texto que puede habersido introducido por el usuario en la consola.
 -- readAction :: String -> OnitamaAction
+-}
+
+cartaATupla :: OnitamaCard -> [(Int,Int)]
+cartaATupla (Tiger) = [(-1,0),(2,0)] -- [(x,y)] x,y son posiciones de la matriz tablero
+cartaATupla (Dragon) = [(-1,1),(-1,-1),(1,2),(1,-2)]
+cartaATupla (Frog) = [(-1,-1),(0,-2),(1,1)]
+cartaATupla (Rabbit) = [(1,-1),(-1,1)]
+cartaATupla (Crab) = [(0,-2),(-1,0),(0,2)]
+cartaATupla (Elephant) = [(-1,-1),(0,-1),(1,1),(0,1)] 
+cartaATupla (Goose) = [(-1,-1),(0,-1),(1,1),(1,1)] 
+cartaATupla (Rooster) = [(1,-1),(0,-1),(1,1),(0,1)] 
+cartaATupla (Monkey) = [(-1,-1),(1,-1),(-1,1),(1,1)] 
+cartaATupla (Mantis) = [(-1,-1),(-1,1),(1,0)] 
+cartaATupla (Horse) = [(0,-1),(-1,0),(1,0)] 
+cartaATupla (Ox) = [(0,1),(-1,0),(1,0)] 
+cartaATupla (Crane) = [(1,-1),(-1,0),(1,1)] 
+cartaATupla (Boar) = [(0,-1),(-1,0),(0,1)] 
+cartaATupla (Eel) = [(-1,-1),(1,-1),(0,1)] 
+cartaATupla (Cobra) = [(1,-1),(1,1),(0,-1)] 
