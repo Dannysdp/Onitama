@@ -32,16 +32,17 @@ data GameResult p = Winner p | Loser p | Draw deriving(Eq, Show)
  !! 5 = carta5 (Extra)
 d7 a d6
 -}
+
 beginning :: [OnitamaCard] -> OnitamaGame -- yo doy barajas
--- beginning = Tablero [(Pieza Vacio x y) | x <- [1..3] y <- [0..4]] ++ [(Pieza BluePlayer x y) | x <- 1 y <- [0..4]] ++ [(Pieza RedPlayer x y) | x <- 4 y <- [0..4]]
 beginning baraja = (OnitamaGame tablero (fst cartas1) (fst cartas2) (fst cartaE) RedPlayer)
     where 
         cartas1 = (splitAt 2 baraja)
         cartas2 = (splitAt 2 (snd cartas1))
         cartaE = (splitAt 1 (snd cartas2))
---Esta función determina a cuál jugador le toca mover,dado un estado de juego.
+
 activePlayer :: OnitamaGame -> OnitamaPlayer
 activePlayer (OnitamaGame  _ _ _ _ jugador) = jugador
+
 {-
 --La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posiblesmovimientos para el estado de juego dado. Sino la lista debe estar vacía.
 actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
@@ -76,11 +77,14 @@ result :: OnitamaGame -> [GameResult OnitamaPlayer]
 -- readAction :: String -> OnitamaAction
 -}
 
+
+------------------- AUXILIARES -------------------
 cordAPos :: (Integer, Integer) -> Integer
 cordAPos (x,y) = x+y*5
 
 posACord :: Int -> (Int, Int)
 posACord pos = (pos-5*(div pos 5),div pos 5)
+
 -- TODO invertir cambiar x con y 
 cartaATupla :: OnitamaCard -> [(Int,Int)]
 cartaATupla (Tiger) = [(-1,0),(2,0)] -- [(x,y)] x,y son posiciones de la matriz tablero
