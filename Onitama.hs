@@ -2,13 +2,13 @@ data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Sho
 
 data Place = Move Int Int deriving (Eq,Show)
 
-data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] OnitamaCard OnitamaPlayer  -- tablero actual, cartas1, cartas2, carta extra y juegador
+data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer deriving(Show)  -- tablero actual, cartas1, cartas2, carta extra y juegador
 
 data OnitamaAction = OnitamaAction (Place,Place)
 
-data Tablero = Tablero [Pieza]
+data Tablero = Tablero [Pieza] deriving(Show)
 
-data OnitamaCard = Tiger | Dragon | Frog | Rabbit | Crab | Elephant | Goose | Rooster | Monkey | Mantis | Horse | Ox | Crane | Boar | Eel | Cobra 
+data OnitamaCard = Tiger | Dragon | Frog | Rabbit | Crab | Elephant | Goose | Rooster | Monkey | Mantis | Horse | Ox | Crane | Boar | Eel | Cobra deriving(Show)
 -- aca ponemos todas las cartas (tiger,oz,dragon)
 
 data OnitamaPlayer = RedPlayer | BluePlayer deriving(Eq, Show, Enum)
@@ -34,7 +34,11 @@ d7 a d6
 -}
 beginning :: [OnitamaCard] -> OnitamaGame -- yo doy barajas
 -- beginning = Tablero [(Pieza Vacio x y) | x <- [1..3] y <- [0..4]] ++ [(Pieza BluePlayer x y) | x <- 1 y <- [0..4]] ++ [(Pieza RedPlayer x y) | x <- 4 y <- [0..4]]
-beginning baraja = (OnitamaGame (Tablero [Peon RedPlayer]) [Tiger] [Dragon] Cobra RedPlayer)
+beginning baraja = (OnitamaGame tablero (fst cartas1) (fst cartas2) (fst cartaE) RedPlayer)
+    where 
+        cartas1 = (splitAt 2 baraja)
+        cartas2 = (splitAt 2 (snd cartas1))
+        cartaE = (splitAt 1 (snd cartas2))
 --Esta función determina a cuál jugador le toca mover,dado un estado de juego.
 activePlayer :: OnitamaGame -> OnitamaPlayer
 activePlayer (OnitamaGame  _ _ _ _ jugador) = jugador
@@ -89,3 +93,5 @@ cartaATupla (Crane) = [(1,-1),(-1,0),(1,1)]
 cartaATupla (Boar) = [(0,-1),(-1,0),(0,1)] 
 cartaATupla (Eel) = [(-1,-1),(1,-1),(0,1)] 
 cartaATupla (Cobra) = [(1,-1),(1,1),(0,-1)] 
+
+tablero = (Tablero ((replicate 2 (Peon RedPlayer)) ++ [(Maestro RedPlayer)] ++ (replicate 2 (Peon RedPlayer)) ++ (replicate 15 Vacio) ++ (replicate 2 (Peon BluePlayer)) ++ [(Maestro BluePlayer)] ++ (replicate 2 (Peon BluePlayer))))
