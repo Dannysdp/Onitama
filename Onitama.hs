@@ -9,11 +9,11 @@ data OnitamaAction = OnitamaAction (Place,Place)
 data Tablero = Tablero [Pieza] deriving(Show)
 
 data OnitamaCard = Tiger | Dragon | Frog | Rabbit | Crab | Elephant | Goose | Rooster | Monkey | Mantis | Horse | Ox | Crane | Boar | Eel | Cobra deriving(Show)
--- aca ponemos todas las cartas (tiger,oz,dragon)
 
 data OnitamaPlayer = RedPlayer | BluePlayer deriving(Eq, Show, Enum)
 
 data GameResult p = Winner p | Loser p | Draw deriving(Eq, Show)
+
 --                  cordenadas x y           pos lista 
 -- r1 r2 rr r3 r4 | 0,4 1,4 2,4 3,4 4,4  -> 20 21 22 23 24 
 --  -  -  -  -  - | 0,3 1,3 2,3 3,3 4,3  -> 15 16 17 18 19 
@@ -22,16 +22,6 @@ data GameResult p = Winner p | Loser p | Draw deriving(Eq, Show)
 -- a1 a2 ra a3 a4 | 0,0 1,0 2,0 3,0 4,0  -> 0  1  2  3  4 
 -- x = horizontal y = veritcal 
 -- convertir de pos lista a cordenadas = x + y*5
-{-
- [(Movimiento,Movimiento)] 
- !! 0 = (Move,Move)
- !! 1 = carta1 (un jugador)
- !! 2 = carta2 (un jugador)
- !! 3 = carta3 (otro jugador) 
- !! 4 = carta4 (otro jugador)
- !! 5 = carta5 (Extra)
-d7 a d6
--}
 
 beginning :: [OnitamaCard] -> OnitamaGame -- yo doy barajas
 beginning baraja = (OnitamaGame tablero (fst cartas1) (fst cartas2) (fst cartaE) RedPlayer)
@@ -79,15 +69,17 @@ result :: OnitamaGame -> [GameResult OnitamaPlayer]
 
 
 ------------------- AUXILIARES -------------------
+--cordenada a posicion
 cordAPos :: (Integer, Integer) -> Integer
 cordAPos (x,y) = x+y*5
-
+--Posicion a cordenada 
 posACord :: Int -> (Int, Int)
 posACord pos = (pos-5*(div pos 5),div pos 5)
 
--- TODO invertir cambiar x con y 
+-- TODO invertir x con y 
+-- [(x,y)] x,y son posiciones de la matriz tablero
 cartaATupla :: OnitamaCard -> [(Int,Int)]
-cartaATupla (Tiger) = [(-1,0),(2,0)] -- [(x,y)] x,y son posiciones de la matriz tablero
+cartaATupla (Tiger) = [(-1,0),(2,0)] 
 cartaATupla (Dragon) = [(-1,1),(-1,-1),(1,2),(1,-2)]
 cartaATupla (Frog) = [(-1,-1),(0,-2),(1,1)]
 cartaATupla (Rabbit) = [(1,-1),(-1,1)]
