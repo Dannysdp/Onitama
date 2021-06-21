@@ -75,7 +75,7 @@ result :: OnitamaGame -> [GameResult OnitamaPlayer]
 --Obtiene una acción a partir de un texto que puede habersido introducido por el usuario en la consola.
 -- readAction :: String -> OnitamaAction
 -}
-
+-- TODO invertir cambiar x con y 
 cartaATupla :: OnitamaCard -> [(Int,Int)]
 cartaATupla (Tiger) = [(-1,0),(2,0)] -- [(x,y)] x,y son posiciones de la matriz tablero
 cartaATupla (Dragon) = [(-1,1),(-1,-1),(1,2),(1,-2)]
