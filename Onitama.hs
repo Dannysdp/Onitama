@@ -1,3 +1,5 @@
+import Data.Maybe (fromMaybe)
+
 data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Show)
 
 -- data Move = Move (Integer, Integer) deriving (Eq,Show)
@@ -33,22 +35,27 @@ beginning baraja = (OnitamaGame tableroInicial (fst cartas1) (fst cartas2) (fst 
 activePlayer :: OnitamaGame -> OnitamaPlayer
 activePlayer (OnitamaGame  _ _ _ _ jugador) = jugador
 
+activePieza :: OnitamaGame -> [Pieza]
+activePieza (OnitamaGame  (Tablero []) _ _ _ _) = []
+activePieza game@(OnitamaGame  (Tablero (piez:lista)) _ _ _ _) = [piez] ++ activePieza game
+
 
 --La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posibles movimientos para el estado de juego dado. Sino la lista debe estar vacía.
 actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
 actions game@(OnitamaGame tablero cartasR cartasA cartasE jugador) = [(RedPlayer, if jugador == RedPlayer then actionsRed else []), (BluePlayer, if jugador == BluePlayer then actionsBlue else [])]
-    where actionsRed = recorrerTablero game tablero 0
-          actionsBlue = recorrerTablero game tablero 0
+    where actionsRed = recorrerTablero game 0
+          actionsBlue = recorrerTablero game 0
 
-recorrerTablero :: OnitamaGame -> Tablero -> Integer -> [OnitamaAction]
-recorrerTablero (OnitamaGame (Tablero []) cartasR cartasA cartasE jugador) _ _  = []
-recorrerTablero game@(OnitamaGame (Tablero (p:tablero)) cartasR cartasA cartasE jugador) tableroSinCambios pos
- |(piezaAJugador p == jugador) = crearMov p tableroSinCambios pos (cartasJugador game) ++ recorrerTablero game tableroSinCambios (pos+1) 
- |otherwise = recorrerTablero game tableroSinCambios (pos+1)
+recorrerTablero :: OnitamaGame -> Integer -> [OnitamaAction]
+recorrerTablero (OnitamaGame (Tablero []) cartasR cartasA cartasE jugador) _  = []
+recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE jugador) pos
+ |pos == 24 = []
+ |piezaAJugador (tablero!!(fromIntegral pos)) == (Maybe just jugador | Nothing) = crearMov (tablero!!(fromIntegral pos)) t pos (cartasJugador game) ++ recorrerTablero game (pos+1)
+ |otherwise = recorrerTablero game (pos+1)
 
 crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> [OnitamaAction]
 crearMov _ _ _ [] = []
-crearMov pieza tablero pos (mov:cartas) = if (tablero!!(fromIntegral pos)) /= pieza then movimientos (posACord pos) (cartaATupla mov) ++ crearMov pieza tablero pos cartas else []
+crearMov pieza t@(Tablero tablero) pos (mov:cartas) = if (tablero!!(fromIntegral pos)) /= pieza then movimientos (posACord pos) (cartaATupla mov) ++ crearMov pieza t pos cartas else []
 
 movimientos (x,y) [] = []
 movimientos (x,y) ((a,b):lista) = [(OnitamaAction (x,y) (x+a,y+b))] ++ movimientos (x,y) lista
@@ -110,9 +117,11 @@ cartaATupla (Boar) = [(0,-1),(-1,0),(0,1)]
 cartaATupla (Eel) = [(-1,-1),(1,-1),(0,1)] 
 cartaATupla (Cobra) = [(1,-1),(1,1),(0,-1)] 
 
-piezaAJugador :: Pieza -> OnitamaPlayer
-piezaAJugador (Peon jugador) = jugador 
-piezaAJugador (Maestro jugador) = jugador 
+piezaAJugador :: Pieza -> Maybe OnitamaPlayer
+piezaAJugador (Peon jugador) = Just jugador 
+piezaAJugador (Maestro jugador) = Just jugador 
+piezaAJugador (Vacio) = Nothing 
+
 
 tableroInicial = (Tablero ((replicate 2 (Peon RedPlayer)) ++ [(Maestro RedPlayer)] ++ (replicate 2 (Peon RedPlayer)) ++ (replicate 15 Vacio) ++ (replicate 2 (Peon BluePlayer)) ++ [(Maestro BluePlayer)] ++ (replicate 2 (Peon BluePlayer))))
 
