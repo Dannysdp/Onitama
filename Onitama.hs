@@ -16,15 +16,13 @@ import Data.Maybe (fromMaybe)
 
 data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Show)
 
--- data Move = Move (Integer, Integer) deriving (Eq,Show)
-
 data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer deriving(Show)  -- tablero actual, cartas1, cartas2, carta extra y juegador
 
 data OnitamaAction = OnitamaAction (Integer, Integer) OnitamaCard (Integer, Integer)deriving(Show)
 
-data Tablero = Tablero [Pieza] deriving(Show)
-
 data OnitamaCard = Tiger | Dragon | Frog | Rabbit | Crab | Elephant | Goose | Rooster | Monkey | Mantis | Horse | Ox | Crane | Boar | Eel | Cobra deriving(Show)
+
+data Tablero = Tablero [Pieza] deriving(Show)
 
 data OnitamaPlayer = RedPlayer | BluePlayer deriving(Eq, Show, Enum)
 
@@ -38,6 +36,30 @@ data GameResult p = Winner p | Loser p | Draw deriving(Eq, Show)
 -- a1 a2 ra a3 a4 | 0,0 1,0 2,0 3,0 4,0  -> 0  1  2  3  4 
 -- x = horizontal y = veritcal 
 -- convertir de pos lista a cordenadas = x + y*5
+
+
+{- Es posible que el paquete `System.Random` no esté disponible si se instaló el core de la Haskell 
+Platform en el sistema. Para instalarlo, ejecutar los siguientes comandos:
+
+> cabal update
+> cabal install --lib random
+-- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
+next gameActual@(OnitamaGame table c cz ce _) jugador accion
+ | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
+ | (actualizoTablero table accion) == Nothing = error "No se puede realizar ese movimiento!" 
+ | (actualizoTablero table accion) /= Nothing = OnitamaGame (actualizoTablero table accion) c cz ce (otroPlayer jugador)
+ | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
+
+La herramienta `cabal` es un manejador de paquetes usado por la plataforma Haskell. Debería estar 
+disponible junto con el `ghci`.
+
+-}
+
+{-- Lógica de juego --------------------------------------------------------------------------------
+
+Funciones de marca sin ninguna implementación útil. Reemplazar por el código apropiado o por imports
+a los módulos necesarios.
+-}
 
 beginning :: [OnitamaCard] -> OnitamaGame -- yo doy barajas
 beginning baraja = (OnitamaGame tableroInicial (fst cartas1) (fst cartas2) (fst cartaE) RedPlayer)
@@ -65,56 +87,14 @@ crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> [OnitamaAction]
 crearMov _ _ _ [] = []
 crearMov pieza t@(Tablero tablero) pos (carta:baraja) = if (tablero!!(fromIntegral pos)) == pieza then (movimientos (posACord pos) (cartaATupla carta) tablero carta) ++ crearMov pieza t pos baraja else []
 
-movimientos :: (Integer,Integer) -> [(Integer,Integer)] -> Tablero -> OnitamaCard -> [OnitamaAction]
+movimientosPosibles :: (Integer,Integer) -> [(Integer,Integer)] -> Tablero -> OnitamaCard -> [OnitamaAction]
 movimientosPosibles (x,y) [] _ _ = []
 movimientosPosibles (x,y) ((a,b):lista) tablero carta 
  |esMovValido (x,y) carta tablero = [(OnitamaAction (x+a,y+b) carta)] ++ movimientosPosibles (x,y) lista tablero carta
  |otherwise = movimientosPosibles (x,y) lista tablero carta
 
-{- Es posible que el paquete `System.Random` no esté disponible si se instaló el core de la Haskell 
-Platform en el sistema. Para instalarlo, ejecutar los siguientes comandos:
-
-> cabal update
-> cabal install --lib random
--- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
-next gameActual@(OnitamaGame table c cz ce _) jugador accion
- | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
- | (actualizoTablero table accion) == Nothing = error "No se puede realizar ese movimiento!" 
- | (actualizoTablero table accion) /= Nothing = OnitamaGame (actualizoTablero table accion) c cz ce (otroPlayer jugador)
- | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
-
-La herramienta `cabal` es un manejador de paquetes usado por la plataforma Haskell. Debería estar 
-disponible junto con el `ghci`.
-
--}
-
-{-- Lógica de juego --------------------------------------------------------------------------------
-
-Funciones de marca sin ninguna implementación útil. Reemplazar por el código apropiado o por imports
-a los módulos necesarios.
--}
-
-data OnitamaPlayer = RedPlayer | BluePlayer deriving (Eq, Show, Enum, Bounded)
-data OnitamaGame = OnitamaGame Bool deriving (Eq, Show) --TODO
-data OnitamaAction = OnitamaAction deriving (Eq, Show, Read) --TODO
-data OnitamaCard = OnitamaCard Int deriving (Eq, Show, Read) --TODO
-
-data GameResult p = Winner p | Loser p | Draw deriving (Eq, Show)
-
 deck :: [OnitamaCard]
 deck = [OnitamaCard n | n <- [0..2]]
-
-beginning :: [OnitamaCard] -> OnitamaGame
-beginning _ = OnitamaGame False --TODO
-
-activePlayer :: OnitamaGame -> Maybe OnitamaPlayer
-activePlayer g = listToMaybe [p | (p, as) <- actions g, not (null as)]
-
-actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
-actions (OnitamaGame f) = zip players [if f then [] else [OnitamaAction], []] --TODO
-
-next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
-next _ _ _ = OnitamaGame True --TODO
 
 result :: OnitamaGame -> [GameResult OnitamaPlayer]
 result (OnitamaGame f) = if f then [] else [rf p | (rf, p) <- zip [Winner, Loser] players] --TODO
@@ -156,8 +136,8 @@ piezaAJugador (Maestro jugador) = jugador
 cartasJugador :: OnitamaGame -> OnitamaPlayer
 cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador == RedPlayer then cartasR else cartasA 
 
-esMovValido :: OnitamaAction -> Tablero -> Boolean 
-esMovValido (OnitamaAction(x,y) (OnitamaCard (x,y))) tablero = (x+a)> = 0 && (y+b)>=0 && (x+a)<5 && (y+b)<5 && tablero!!(fromIntegral (cordAPos (x,y))) /= tablero!!(fromIntegral (cordAPos (x,y))
+-- esMovValido :: OnitamaAction -> Tablero -> Boolean 
+-- esMovValido (OnitamaAction(x,y) (OnitamaCard (x,y))) tablero = (x+a)> = 0 && (y+b)>=0 && (x+a)<5 && (y+b)<5 && tablero!!(fromIntegral (cordAPos (x,y))) /= tablero!!(fromIntegral (cordAPos (x,y))
 
 -- TODO invertir x con y 
 -- [(x,y)] x,y son posiciones de la matriz tablero
