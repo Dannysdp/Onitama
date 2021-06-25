@@ -6,7 +6,7 @@ data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Sho
 
 data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer deriving(Show)  -- tablero actual, cartas1, cartas2, carta extra y juegador
 
-data OnitamaAction = OnitamaAction (Integer, Integer) (Integer, Integer) deriving(Show)
+data OnitamaAction = OnitamaAction (Integer, Integer) OnitamaCard deriving(Show)
 
 data Tablero = Tablero [Pieza] deriving(Show)
 
@@ -35,11 +35,6 @@ beginning baraja = (OnitamaGame tableroInicial (fst cartas1) (fst cartas2) (fst 
 activePlayer :: OnitamaGame -> OnitamaPlayer
 activePlayer (OnitamaGame  _ _ _ _ jugador) = jugador
 
-activePieza :: OnitamaGame -> [Pieza]
-activePieza (OnitamaGame  (Tablero []) _ _ _ _) = []
-activePieza game@(OnitamaGame  (Tablero (piez:lista)) _ _ _ _) = [piez] ++ activePieza game
-
-
 --La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posibles movimientos para el estado de juego dado. Sino la lista debe estar vacía.
 actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
 actions game@(OnitamaGame tablero cartasR cartasA cartasE jugador) = [(RedPlayer, if jugador == RedPlayer then actionsRed else []), (BluePlayer, if jugador == BluePlayer then actionsBlue else [])]
@@ -47,35 +42,32 @@ actions game@(OnitamaGame tablero cartasR cartasA cartasE jugador) = [(RedPlayer
           actionsBlue = recorrerTablero game 0
 
 recorrerTablero :: OnitamaGame -> Integer -> [OnitamaAction]
-recorrerTablero (OnitamaGame (Tablero []) cartasR cartasA cartasE jugador) _  = []
 recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE jugador) pos
  |pos == 24 = []
  |(tablero!!(fromIntegral pos)) == (Peon jugador) || (tablero!!(fromIntegral pos)) == (Maestro jugador) = crearMov (tablero!!(fromIntegral pos)) t pos (cartasJugador game) ++ recorrerTablero game (pos+1)
  |otherwise = recorrerTablero game (pos+1)
 
- 
 crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> [OnitamaAction]
 crearMov _ _ _ [] = []
-crearMov pieza t@(Tablero tablero) pos (mov:cartas) = if (tablero!!(fromIntegral pos)) == pieza then (movimientos (posACord pos) (cartaATupla mov) tablero) ++ crearMov pieza t pos cartas else []
+crearMov pieza t@(Tablero tablero) pos (carta:baraja) = if (tablero!!(fromIntegral pos)) == pieza then (movimientos (posACord pos) (cartaATupla carta) tablero carta) ++ crearMov pieza t pos baraja else []
 
-movimientos (x,y) [] _ = []
-movimientos (x,y) ((a,b):lista) tablero 
- |(x+a)>=0 && (y+b)>=0 && (x+a)<5 && (y+b)<5 && tablero!!(fromIntegral (cordAPos (x+a,y+b))) /= (Peon RedPlayer) = [(OnitamaAction (x,y) (x+a,y+b))] ++ movimientos (x,y) lista tablero
- |otherwise = movimientos (x,y) lista tablero
+movimientos :: (Integer,Integer) -> [(Integer,Integer)] -> Tablero -> OnitamaCard -> [OnitamaAction]
+movimientosPosibles (x,y) [] _ _ = []
+movimientosPosibles (x,y) ((a,b):lista) tablero carta 
+ |esMovValido (x,y) carta tablero = [(OnitamaAction (x+a,y+b) carta)] ++ movimientosPosibles (x,y) lista tablero carta
+ |otherwise = movimientosPosibles (x,y) lista tablero carta
 
-{-
+
 -- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
--- next :: OnitamaGame -> (OnitamaPlayer, OnitamaAction) -> OnitamaGame
-next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
---next :: estadoActual -> JugadorSiguiente (el que va a jugar ahora, NO el de estado actual), un movimiento -------> DEVUELVE UN estadoSiguiente.
-next gameActual jugador accion
- | activePlayer OnitamaGame != jugador = error "No puede jugar dos veces seguidas"
- | (OnitamaGame tablero _ _ _ _) jugadorAct accion = if (actualizoTablero tablero accion) == Nothing then error "No se puede realizar ese movimiento!" else OnitamaGame (actualizoTablero tablero accion) jugadorAct accion
- otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
+next gameActual@(OnitamaGame table c cz ce _) jugador accion
+ | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
+ | (actualizoTablero table accion) == Nothing = error "No se puede realizar ese movimiento!" 
+ | (actualizoTablero table accion) /= Nothing = OnitamaGame (actualizoTablero table accion) c cz ce (otroPlayer jugador)
+ | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
 
 
 --Si el juego está terminado retorna el resul-tado de juego para cada jugador. Si el juego no está terminado, se debe retornar una lista vacía.
-result :: OnitamaGame -> [GameResult OnitamaPlayer]
+-- result :: OnitamaGame -> [GameResult OnitamaPlayer]
 
 --Retorna el puntaje para todos los jugadoresen el estado de juego dado. Esto es independiente de si el juego está terminado o no.
 -- score :: OnitamaGame -> [(OnitamaPlayer, Double)]
@@ -88,7 +80,6 @@ result :: OnitamaGame -> [GameResult OnitamaPlayer]
 
 --Obtiene una acción a partir de un texto que puede habersido introducido por el usuario en la consola.
 -- readAction :: String -> OnitamaAction
--}
 
 
 ------------------- AUXILIARES -------------------
@@ -98,6 +89,26 @@ cordAPos (x, y) = x + y * 5
 --Posicion a cordenada 
 posACord :: Integer -> (Integer, Integer)
 posACord pos = (pos - 5 * (div pos 5), div pos 5)
+
+-- Actualiza el tablero dado, con la acción dada. (básicamente conformando la lógica del next):
+--Retorna maybe tablero, nothing en caso de que no se pueda realizar la accion, tablero en caso de que si.
+actualizoTablero :: Tablero -> OnitamaAction -> Maybe Tablero
+actualizoTablero t (OnitamaAction (x,y) c) = Nothing  
+
+-- otroPlayer, devuelve el jugador contrario al que le toca (utilizado para la lógica del next):
+otroPlayer :: OnitamaPlayer -> OnitamaPlayer
+otroPlayer (RedPlayer) = BluePlayer
+otroPlayer (BluePlayer) = RedPlayer
+
+piezaAJugador :: Pieza -> OnitamaPlayer
+piezaAJugador (Peon jugador) = jugador 
+piezaAJugador (Maestro jugador) = jugador 
+
+cartasJugador :: OnitamaGame -> OnitamaPlayer
+cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador == RedPlayer then cartasR else cartasA 
+
+esMovValido :: OnitamaAction -> Tablero -> Boolean 
+esMovValido (OnitamaAction(x,y) (OnitamaCard (x,y))) tablero = (x+a)> = 0 && (y+b)>=0 && (x+a)<5 && (y+b)<5 && tablero!!(fromIntegral (cordAPos (x,y))) /= tablero!!(fromIntegral (cordAPos (x,y))
 
 -- TODO invertir x con y 
 -- [(x,y)] x,y son posiciones de la matriz tablero
@@ -119,11 +130,4 @@ cartaATupla (Boar) = [(0,-1),(-1,0),(0,1)]
 cartaATupla (Eel) = [(-1,-1),(1,-1),(0,1)] 
 cartaATupla (Cobra) = [(1,-1),(1,1),(0,-1)] 
 
-piezaAJugador :: Pieza -> OnitamaPlayer
-piezaAJugador (Peon jugador) = jugador 
-piezaAJugador (Maestro jugador) = jugador 
-
-
 tableroInicial = (Tablero ((replicate 2 (Peon RedPlayer)) ++ [(Maestro RedPlayer)] ++ (replicate 2 (Peon RedPlayer)) ++ (replicate 15 Vacio) ++ (replicate 2 (Peon BluePlayer)) ++ [(Maestro BluePlayer)] ++ (replicate 2 (Peon BluePlayer))))
-
-cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador == RedPlayer then cartasR else cartasA 
