@@ -1,93 +1,152 @@
-data Pieza = Peon Int Int | Maestro Int Int | Vacio Int Int deriving (Eq,Show)
+{- Tak ------------------------------------------------------------------------------------------
+ 
+Plantilla de código para el proyecto del curso de 2021 de _Programación Funcional_ para las carreras 
+de Ingeniería y Licenciatura en Informática de la FIT (UCU).
+Los docentes no garantizan que este código esté libre de errores. De encontrar problemas, por favor
+reportarlos a la cátedra.
 
-data Place = Move Int Int deriving (Eq,Show)
+Leonardo Val, Ignacio Pacheco.
+-}
+module Onitama where
 
-data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] OnitamaCard OnitamaPlayer  -- tablero actual, cartas1, cartas2, carta extra y juegador
+import Data.Maybe (fromJust, listToMaybe)
+import Data.List (elemIndex, sort)
+import System.Random
 
-data OnitamaAction = OnitamaAction (Place,Place)
--- hay que ponerle la carta q utiliza esta accion y la pieza q modifica, pero mepa q eso es "Peleable"
+{- Es posible que el paquete `System.Random` no esté disponible si se instaló el core de la Haskell 
+Platform en el sistema. Para instalarlo, ejecutar los siguientes comandos:
 
--- a1 a2 ra a3 a4 | 0,0 0,1 0,2 0,3 0,4
---  -  -  -  -  - | 1,0 1,1 1,2 1,3 1,4 
---  -  -  -  -  - | 2,0 2,1 2,2 2,3 2,4
---  -  -  -  -  - | 3,0 3,1 3,2 3,3 3,4
--- r1 r2 rr r3 r4 | 4,0 4,1 4,2 4,3 4,4
--- x = vertial y = horizontal 
-{-
- [(Movimiento,Movimiento)] 
- !! 0 = (Move,Move)
- !! 1 = carta1 (un jugador)
- !! 2 = carta2 (un jugador)
- !! 3 = carta3 (otro jugador) 
- !! 4 = carta4 (otro jugador)
- !! 5 = carta5 (Extra)
-d7 a d6
+> cabal update
+> cabal install --lib random
+
+La herramienta `cabal` es un manejador de paquetes usado por la plataforma Haskell. Debería estar 
+disponible junto con el `ghci`.
+
 -}
 
-data Tablero = Tablero [Pieza]
-data OnitamaCard = Tiger | Dragon | Frog | Rabbit | Crab | Elephant | Goose | Rooster | Monkey | Mantis | Horse | Ox | Crane | Boar | Eel | Cobra 
--- aca ponemos todas las cartas (tiger,oz,dragon)
+{-- Lógica de juego --------------------------------------------------------------------------------
 
-cartaATupla :: OnitamaCard -> [(Int,Int)]
-cartaATupla (Tiger) = [(-1,0),(2,0)] -- [(x,y)] x,y son posiciones de la matriz tablero
-cartaATupla (Dragon) = [(-1,1),(-1,-1),(1,2),(1,-2)]
-cartaATupla (Frog) = [(-1,-1),(0,-2),(1,1)]
-cartaATupla (Rabbit) = [(1,-1),(-1,1)]
-cartaATupla (Crab) = [(0,-2),(-1,0),(0,2)]
-cartaATupla (Elephant) = [(-1,-1),(0,-1),(1,1),(0,1)] 
-cartaATupla (Goose) = [(-1,-1),(0,-1),(1,1),(1,1)] 
-cartaATupla (Rooster) = [(1,-1),(0,-1),(1,1),(0,1)] 
-cartaATupla (Monkey) = [(-1,-1),(1,-1),(-1,1),(1,1)] 
-cartaATupla (Mantis) = [(-1,-1),(-1,1),(1,0)] 
-cartaATupla (Horse) = [(0,-1),(-1,0),(1,0)] 
-cartaATupla (Ox) = [(0,1),(-1,0),(1,0)] 
-cartaATupla (Crane) = [(1,-1),(-1,0),(1,1)] 
-cartaATupla (Boar) = [(0,-1),(-1,0),(0,1)] 
-cartaATupla (Eel) = [(-1,-1),(1,-1),(0,1)] 
-cartaATupla (Cobra) = [(1,-1),(1,1),(0,-1)] 
+Funciones de marca sin ninguna implementación útil. Reemplazar por el código apropiado o por imports
+a los módulos necesarios.
+-}
 
+data OnitamaPlayer = RedPlayer | BluePlayer deriving (Eq, Show, Enum, Bounded)
+data OnitamaGame = OnitamaGame Bool deriving (Eq, Show) --TODO
+data OnitamaAction = OnitamaAction deriving (Eq, Show, Read) --TODO
+data OnitamaCard = OnitamaCard Int deriving (Eq, Show, Read) --TODO
 
-data OnitamaPlayer = RedPlayer | BluePlayer deriving(Eq, Show, Enum)
+data GameResult p = Winner p | Loser p | Draw deriving (Eq, Show)
 
-data GameResult p = Winner p | Loser p | Drawderiving(Eq, Show)
--- : El estado inicial del juego de Onitama. Esto incluye elorden en el cual están barajadas las cartas del mazo
-beginning :: [OnitamaCard] -> OnitamaGame -- yo doy barajas
+deck :: [OnitamaCard]
+deck = [OnitamaCard n | n <- [0..2]]
 
-beginning :: OnitamaGame
-beginning = Tablero [(Pieza Vacio x y) | x <- [1..3] y <- [0..4]] ++ [(Pieza BluePlayer x y) | x <- 1 y <- [0..4]] ++ [(Pieza RedPlayer x y) | x <- 4 y <- [0..4]]
+beginning :: [OnitamaCard] -> OnitamaGame
+beginning _ = OnitamaGame False --TODO
 
---Esta función determina a cuál jugador le toca mover,dado un estado de juego.
-activePlayer :: OnitamaGame -> OnitamaPlayer
-activePlayer (OnitamaGame  _ _ _ _ jugador) = jugador
+activePlayer :: OnitamaGame -> Maybe OnitamaPlayer
+activePlayer g = listToMaybe [p | (p, as) <- actions g, not (null as)]
 
---La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posiblesmovimientos para el estado de juego dado. Sino la lista debe estar vacía.
 actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
-actions tablero@(Tablero lista _) = [actionsRed] ++ [actionsBlue] where
- actionsRed = --definir el RedPlayer, zip con una funcion listaInsertar y otra que
-                -- vea las casillas vacias?? 
+actions (OnitamaGame f) = zip players [if f then [] else [OnitamaAction], []] --TODO
 
-
--- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
--- next :: OnitamaGame -> (OnitamaPlayer, OnitamaAction) -> OnitamaGame
 next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
---next :: estadoActual -> JugadorSiguiente (el que va a jugar ahora, NO el de estado actual), un movimiento -------> DEVUELVE UN estadoSiguiente.
-next gameActual jugador accion
- | activePlayer OnitamaGame != jugador = error "No puede jugar dos veces seguidas"
- | (OnitamaGame tablero _ _ _ _) jugadorAct accion = if (actualizoTablero tablero accion) == Nothing then error "No se puede realizar ese movimiento!" else OnitamaGame (actualizoTablero tablero accion) jugadorAct accion
- otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
+next _ _ _ = OnitamaGame True --TODO
 
-
---Si el juego está terminado retorna el resul-tado de juego para cada jugador. Si el juego no está terminado, se debe retornar una lista vacía.
 result :: OnitamaGame -> [GameResult OnitamaPlayer]
+result (OnitamaGame f) = if f then [] else [rf p | (rf, p) <- zip [Winner, Loser] players] --TODO
 
---Retorna el puntaje para todos los jugadoresen el estado de juego dado. Esto es independiente de si el juego está terminado o no.
--- score :: OnitamaGame -> [(OnitamaPlayer, Double)]
+showGame :: OnitamaGame -> String
+showGame g = show g --TODO
 
--- Convierte el estado de juego a un texto que puede ser impresoen la consola para mostrar el tablero y demás información de la partida.
--- showGame :: OnitamaGame -> String
+showAction :: OnitamaAction -> String
+showAction a = show a --TODO
+   
+readAction :: String -> OnitamaAction
+readAction = read --TODO
 
---Convierte una acción a un texto que puede ser impreso enla consola para mostrarla.
--- showAction :: OnitamaAction -> String
+players :: [OnitamaPlayer]
+players = [minBound..maxBound]
 
---Obtiene una acción a partir de un texto que puede habersido introducido por el usuario en la consola.
--- readAction :: String -> OnitamaAction
+{-- Match controller -------------------------------------------------------------------------------
+
+Código de prueba. Incluye una función para correr las partidas y dos agentes: consola y aleatorio.
+
+-}
+type OnitamaAgent = OnitamaGame -> IO (Maybe OnitamaAction)
+
+{- La función ´runMatch´ corre la partida completa a partir del estado de juego dado, usando los dos 
+agentes dados. Retorna una tupla con los puntajes (score) finales del juego.
+-}
+runMatch :: (OnitamaAgent, OnitamaAgent) -> OnitamaGame -> IO [GameResult OnitamaPlayer]
+runMatch ags@(ag1, ag2) g = do
+   putStrLn (showGame g)
+   case (activePlayer g) of
+      Nothing -> return $ result g
+      Just p -> do
+         let ag = [ag1, ag2] !! (fromJust (elemIndex p players))
+         move <- ag g
+         runMatch ags (Onitama.next g p (fromJust move))
+
+shuffle :: [a] -> IO [a]
+shuffle vs = do
+  let len = length vs
+  rs <- mapM randomRIO (take len (repeat (0.0::Double, 1.0)))
+  return [vs !! i | (_, i) <- sort (zip rs [0..(len - 1)])]
+
+runGame :: (OnitamaAgent, OnitamaAgent) -> IO [GameResult OnitamaPlayer]
+runGame ags = do
+  cards <- shuffle deck
+  runMatch ags (beginning cards)
+
+{- El agente de consola ´consoleAgent´ muestra el estado de juego y los movimientos disponibles por
+consola, y espera una acción por entrada de texto.
+-}
+consoleAgent :: OnitamaPlayer -> OnitamaAgent
+consoleAgent player state = do
+   let moves = fromJust (lookup player (actions state))
+   if null moves then do
+      putStrLn "No moves!"
+      getLine
+      return Nothing
+   else do
+      putStrLn ("Select one move:" ++ concat [" "++ show m | m <- moves])
+      line <- getLine
+      let input = readAction line
+      if elem input moves then return (Just input) else do 
+         putStrLn "Invalid move!"
+         consoleAgent player state
+
+
+{- Las funciones ´runConsoleGame´ y `runConsoleMatch` ejecutan toda la partida 
+usando dos agentes de consola.
+-}
+runConsoleGame :: IO [GameResult OnitamaPlayer]
+runConsoleGame = do
+   runGame (consoleAgent RedPlayer, consoleAgent BluePlayer)
+runConsoleMatch :: OnitamaGame -> IO [GameResult OnitamaPlayer]
+runConsoleMatch g = do
+   runMatch (consoleAgent RedPlayer, consoleAgent BluePlayer) g
+
+{- El agente aleatorio ´randomAgent´ elige una acción de las disponibles completamente al azar.
+-}
+randomAgent :: OnitamaPlayer -> OnitamaAgent
+randomAgent player state = do
+    let moves = fromJust (lookup player (actions state))
+    if null moves then do
+       putStrLn "No moves!"
+       return Nothing
+    else do
+       i <- randomRIO (0, (length moves) - 1)
+       return (Just (moves !! i))
+
+{- Las funciones ´runRandomGame´ y `runRandomMatch` ejecutan toda la partida 
+usando dos agentes aleatorios.
+-}
+runRandomGame :: IO [GameResult OnitamaPlayer]
+runRandomGame = do
+   runGame (randomAgent RedPlayer, randomAgent BluePlayer)
+runRandomMatch :: OnitamaGame -> IO [GameResult OnitamaPlayer]
+runRandomMatch g = do
+   runMatch (randomAgent RedPlayer, randomAgent BluePlayer) g
+
+-- Fin
