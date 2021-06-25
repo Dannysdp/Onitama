@@ -93,7 +93,7 @@ movimientosPosibles (x,y) ((a,b):lista) tablero carta
 next gameActual@(OnitamaGame table c cz ce _) jugador accion
  | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
  | (actualizoTablero table accion) == Nothing = error "No se puede realizar ese movimiento!" 
- | (actualizoTablero table accion) /= Nothing = OnitamaGame (fromJust (actualizoTablero table accion)) c cz ce (otroPlayer jugador)
+ | (fromJust (actualizoTablero table accion)) /= Nothing = OnitamaGame (fromJust (actualizoTablero table accion)) c cz ce (otroPlayer jugador)
  | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
 
 deck = [Tiger , Dragon , Frog , Rabbit , Crab , Elephant , Goose , Rooster , Monkey , Mantis , Horse , Ox , Crane , Boar , Eel , Cobra]
