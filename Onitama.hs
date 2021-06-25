@@ -80,7 +80,7 @@ recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE ju
 
 crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> [OnitamaAction]
 crearMov _ _ _ [] = []
-crearMov pieza t@(Tablero tablero) pos (carta:baraja) = if (tablero!!(fromIntegral pos)) == pieza then (movimientosPosibles (posACord pos) (cartaATupla carta) tablero carta) ++ crearMov pieza t pos baraja else []
+crearMov pieza t@(Tablero tablero) pos (carta:baraja) = if (tablero!!(fromIntegral pos)) == pieza then (movimientosPosibles (posACord pos) (cartaATupla carta) t carta) ++ crearMov pieza t pos baraja else []
 
 --antes movimientos 
 movimientosPosibles :: (Integer,Integer) -> [(Integer,Integer)] -> Tablero -> OnitamaCard -> [OnitamaAction]
@@ -93,13 +93,13 @@ movimientosPosibles (x,y) ((a,b):lista) tablero carta
 next gameActual@(OnitamaGame table c cz ce _) jugador accion
  | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
  | (actualizoTablero table accion) == Nothing = error "No se puede realizar ese movimiento!" 
- | (fromJust (actualizoTablero table accion)) /= Nothing = OnitamaGame (fromJust (actualizoTablero table accion)) c cz ce (otroPlayer jugador)
+ | (actualizoTablero table accion) /= Nothing = OnitamaGame (fromJust (actualizoTablero table accion)) c cz ce (otroPlayer jugador)
  | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
 
 deck = [Tiger , Dragon , Frog , Rabbit , Crab , Elephant , Goose , Rooster , Monkey , Mantis , Horse , Ox , Crane , Boar , Eel , Cobra]
 
---result :: OnitamaGame -> [GameResult OnitamaPlayer]
---result (OnitamaGame f) = if f then [] else [rf p | (rf, p) <- zip [Winner, Loser] players] --TODO
+result :: OnitamaGame -> [GameResult OnitamaPlayer]
+result game = []
 
 showGame :: OnitamaGame -> String
 showGame g = show g --TODO
@@ -108,7 +108,7 @@ showAction :: OnitamaAction -> String
 showAction a = show a --TODO
    
 readAction :: String -> OnitamaAction
-readAction texto = read --TODO (OnitamaAction (int,int) carta (int,int)) 
+readAction texto = (OnitamaAction (1,1) Tiger (1,0)) --TODO (OnitamaAction (int,int) carta (int,int)) 
 
 players :: [OnitamaPlayer]
 players = [minBound..maxBound]
@@ -125,7 +125,7 @@ posACord pos = (pos - 5 * (div pos 5), div pos 5)
 --Retorna maybe tablero, nothing en caso de que no se pueda realizar la accion, tablero en caso de que si.
 
 actualizoTablero :: Tablero -> OnitamaAction -> Maybe Tablero
-actualizoTablero t mov@(OnitamaAction (x,y) c (a,b)) = if (esMovValido mov) then modificoLista (cordAPos (x+a,y+b)) t!!(cordAPos(x,y)) t else Nothing
+actualizoTablero t mov@(OnitamaAction (x,y) c (a,b)) = if ((esMovValido (x,y) c t) then Just (modificoLista (cordAPos (x+a,y+b)) t!!(cordAPos(x,y)) t) else Nothing
 
 modificoLista :: Integer -> a -> [a] -> [a]
 modificoLista _ _ [] = []
@@ -138,7 +138,7 @@ otroPlayer :: OnitamaPlayer -> OnitamaPlayer
 otroPlayer (RedPlayer) = BluePlayer
 otroPlayer (BluePlayer) = RedPlayer
 
-cartasJugador :: OnitamaGame -> OnitamaPlayer
+cartasJugador :: OnitamaGame -> [OnitamaCard]
 cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador == RedPlayer then cartasR else cartasA 
 
 esMovValido :: (Integer,Integer) -> OnitamaCard -> Tablero -> Bool
