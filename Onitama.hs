@@ -86,15 +86,15 @@ crearMov pieza t@(Tablero tablero) pos (carta:baraja) = if (tablero!!(fromIntegr
 movimientosPosibles :: (Integer,Integer) -> [(Integer,Integer)] -> Tablero -> OnitamaCard -> [OnitamaAction]
 movimientosPosibles (x,y) [] _ _ = []
 movimientosPosibles (x,y) ((a,b):lista) tablero carta 
- |esMovValido (x,y) carta tablero = [(OnitamaAction (x,y) carta (x+a,y+b))] ++ movimientosPosibles (x,y) lista tablero carta
+--  |esMovValido (x,y) carta tablero = [(OnitamaAction (x,y) carta (x+a,y+b))] ++ movimientosPosibles (x,y) lista tablero carta
  |otherwise = movimientosPosibles (x,y) lista tablero carta
 
  -- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
-next gameActual@(OnitamaGame table c cz ce _) jugador accion
- | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
- | (actualizoTablero table accion) == Nothing = error "No se puede realizar ese movimiento!" 
- | (actualizoTablero table accion) /= Nothing = OnitamaGame (fromJust (actualizoTablero table accion)) c cz ce (otroPlayer jugador)
- | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
+-- next gameActual@(OnitamaGame table c cz ce _) jugador accion
+--  | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
+--  | (actualizoTablero table accion) == Nothing = error "No se puede realizar ese movimiento!" 
+--  | (actualizoTablero table accion) /= Nothing = OnitamaGame (fromJust (actualizoTablero table accion)) c cz ce (otroPlayer jugador)
+--  | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
 
 deck = [Tiger , Dragon , Frog , Rabbit , Crab , Elephant , Goose , Rooster , Monkey , Mantis , Horse , Ox , Crane , Boar , Eel , Cobra]
 
@@ -111,7 +111,7 @@ readAction :: String -> OnitamaAction
 readAction texto = (OnitamaAction (1,1) Tiger (1,0)) --TODO (OnitamaAction (int,int) carta (int,int)) 
 
 players :: [OnitamaPlayer]
-players = [minBound..maxBound]
+players = []
 
 ------------------- AUXILIARES -------------------
 --cordenada a posicion
@@ -124,8 +124,8 @@ posACord pos = (pos - 5 * (div pos 5), div pos 5)
 -- Actualiza el tablero dado, con la acción dada. (básicamente conformando la lógica del next):
 --Retorna maybe tablero, nothing en caso de que no se pueda realizar la accion, tablero en caso de que si.
 
-actualizoTablero :: Tablero -> OnitamaAction -> Maybe Tablero
-actualizoTablero t mov@(OnitamaAction (x,y) c (a,b)) = if ((esMovValido (x,y) c t) then Just (modificoLista (cordAPos (x+a,y+b)) t!!(cordAPos(x,y)) t) else Nothing
+-- actualizoTablero :: Tablero -> OnitamaAction -> Maybe Tablero
+-- actualizoTablero t mov@(OnitamaAction (x,y) c (a,b)) = if ((esMovValido (x,y) c t) then Just (modificoLista (cordAPos (x+a,y+b)) t!!(cordAPos(x,y)) t) else Nothing
 
 modificoLista :: Integer -> a -> [a] -> [a]
 modificoLista _ _ [] = []
@@ -141,8 +141,8 @@ otroPlayer (BluePlayer) = RedPlayer
 cartasJugador :: OnitamaGame -> [OnitamaCard]
 cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador == RedPlayer then cartasR else cartasA 
 
-esMovValido :: (Integer,Integer) -> OnitamaCard -> Tablero -> Bool
-esMovValido (x,y) (xc,yc) tablero = (x+xc)>=0 && (y+yc)>=0 && (x+xc)<5 && (y+yc)<5 && (tablero!!(fromIntegral (cordAPos (x,y))) /= tablero!!(fromIntegral (cordAPos (x+xc,y+yc))))
+-- esMovValido :: (Integer,Integer) -> OnitamaCard -> Tablero -> Bool
+-- esMovValido (x,y) c tablero = (x+xc)>=0 && (y+yc)>=0 && (x+xc)<5 && (y+yc)<5 && (tablero!!(fromIntegral (cordAPos (x,y))) /= tablero!!(fromIntegral (cordAPos (x+xc,y+yc))))
 
 -- [(x,y)] x,y son posiciones de la matriz tablero
 cartaATupla :: OnitamaCard -> [(Integer,Integer)]
@@ -165,7 +165,7 @@ cartaATupla (Cobra) = [(-1,1),(1,1),(-1,0)]
 
 tableroInicial = (Tablero ((replicate 2 (Peon RedPlayer)) ++ [(Maestro RedPlayer)] ++ (replicate 2 (Peon RedPlayer)) ++ (replicate 15 Vacio) ++ (replicate 2 (Peon BluePlayer)) ++ [(Maestro BluePlayer)] ++ (replicate 2 (Peon BluePlayer))))
 
-
+{-
 {-- Match controller -------------------------------------------------------------------------------
 
 Código de prueba. Incluye una función para correr las partidas y dos agentes: consola y aleatorio.
@@ -251,5 +251,4 @@ runRandomMatch g = do
 -- Fin
 --Obtiene una acción a partir de un texto que puede habersido introducido por el usuario en la consola.
 -- readAction :: String -> OnitamaAction
-
-
+-}
