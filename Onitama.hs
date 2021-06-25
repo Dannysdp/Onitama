@@ -86,7 +86,7 @@ crearMov pieza t@(Tablero tablero) pos (carta:baraja) = if (tablero!!(fromIntegr
 movimientosPosibles :: (Integer,Integer) -> [(Integer,Integer)] -> Tablero -> OnitamaCard -> [OnitamaAction]
 movimientosPosibles (x,y) [] _ _ = []
 movimientosPosibles (x,y) ((a,b):lista) tablero carta 
---  |esMovValido (x,y) carta tablero = [(OnitamaAction (x,y) carta (x+a,y+b))] ++ movimientosPosibles (x,y) lista tablero carta
+ |esMovValido (x,y) carta tablero = [(OnitamaAction (x,y) carta (x+a,y+b))] ++ movimientosPosibles (x,y) lista tablero carta
  |otherwise = movimientosPosibles (x,y) lista tablero carta
 
  -- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
@@ -141,8 +141,18 @@ otroPlayer (BluePlayer) = RedPlayer
 cartasJugador :: OnitamaGame -> [OnitamaCard]
 cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador == RedPlayer then cartasR else cartasA 
 
--- esMovValido :: (Integer,Integer) -> OnitamaCard -> Tablero -> Bool
--- esMovValido (x,y) c tablero = (x+xc)>=0 && (y+yc)>=0 && (x+xc)<5 && (y+yc)<5 && (tablero!!(fromIntegral (cordAPos (x,y))) /= tablero!!(fromIntegral (cordAPos (x+xc,y+yc))))
+-- Evalúa si el movimiento es válido, dadas 2 posiciones.
+puedeMovAsi :: (Integer, Integer) -> (Integer, Integer) -> Tablero -> Bool
+puedeMovAsi (x,y) (xc,yc) tablero = (x+xc)>=0 && (y+yc)>=0 && (x+xc)<5 && (y+yc)<5 &&(tablero!!(fromIntegral (cordAPos (x,y)))) /= cartaJugador (tablero!!(fromIntegral (cordAPos (x+xc,y+yc))))
+
+-- Evalúa para cada elemento de la lista, que sea válido, dada una posición inicial.
+esPosicionValida :: (Integer, Integer) -> [(Integer,Integer)] -> Tablero -> Bool
+esPosicionValida _ [] _ = True
+esPosicionValida posInicial (tupla:lista) t = esMovValido posInicial tupla t && esPosicionValida posInicial lista t 
+
+-- Evalúa que el movimiento es válido, dada una posición inicial y una carta.
+esMovValido :: (Integer, Integer) -> OnitamaCard -> Tablero -> Bool
+esMovValido p c t = esPosicionValida p (cartaATupla c) t
 
 -- [(x,y)] x,y son posiciones de la matriz tablero
 cartaATupla :: OnitamaCard -> [(Integer,Integer)]
