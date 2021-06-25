@@ -50,16 +50,18 @@ recorrerTablero :: OnitamaGame -> Integer -> [OnitamaAction]
 recorrerTablero (OnitamaGame (Tablero []) cartasR cartasA cartasE jugador) _  = []
 recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE jugador) pos
  |pos == 24 = []
- |piezaAJugador (tablero!!(fromIntegral pos)) == (Maybe just jugador | Nothing) = crearMov (tablero!!(fromIntegral pos)) t pos (cartasJugador game) ++ recorrerTablero game (pos+1)
+ |(tablero!!(fromIntegral pos)) == (Peon jugador) || (tablero!!(fromIntegral pos)) == (Maestro jugador) = crearMov (tablero!!(fromIntegral pos)) t pos (cartasJugador game) ++ recorrerTablero game (pos+1)
  |otherwise = recorrerTablero game (pos+1)
 
+ 
 crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> [OnitamaAction]
 crearMov _ _ _ [] = []
-crearMov pieza t@(Tablero tablero) pos (mov:cartas) = if (tablero!!(fromIntegral pos)) /= pieza then movimientos (posACord pos) (cartaATupla mov) ++ crearMov pieza t pos cartas else []
+crearMov pieza t@(Tablero tablero) pos (mov:cartas) = if (tablero!!(fromIntegral pos)) == pieza then (movimientos (posACord pos) (cartaATupla mov) tablero) ++ crearMov pieza t pos cartas else []
 
-movimientos (x,y) [] = []
-movimientos (x,y) ((a,b):lista) = [(OnitamaAction (x,y) (x+a,y+b))] ++ movimientos (x,y) lista
-
+movimientos (x,y) [] _ = []
+movimientos (x,y) ((a,b):lista) tablero 
+ |(x+a)>=0 && (y+b)>=0 && (x+a)<5 && (y+b)<5 && tablero!!(fromIntegral (cordAPos (x+a,y+b))) /= (Peon RedPlayer) = [(OnitamaAction (x,y) (x+a,y+b))] ++ movimientos (x,y) lista tablero
+ |otherwise = movimientos (x,y) lista tablero
 
 {-
 -- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
@@ -117,10 +119,9 @@ cartaATupla (Boar) = [(0,-1),(-1,0),(0,1)]
 cartaATupla (Eel) = [(-1,-1),(1,-1),(0,1)] 
 cartaATupla (Cobra) = [(1,-1),(1,1),(0,-1)] 
 
-piezaAJugador :: Pieza -> Maybe OnitamaPlayer
-piezaAJugador (Peon jugador) = Just jugador 
-piezaAJugador (Maestro jugador) = Just jugador 
-piezaAJugador (Vacio) = Nothing 
+piezaAJugador :: Pieza -> OnitamaPlayer
+piezaAJugador (Peon jugador) = jugador 
+piezaAJugador (Maestro jugador) = jugador 
 
 
 tableroInicial = (Tablero ((replicate 2 (Peon RedPlayer)) ++ [(Maestro RedPlayer)] ++ (replicate 2 (Peon RedPlayer)) ++ (replicate 15 Vacio) ++ (replicate 2 (Peon BluePlayer)) ++ [(Maestro BluePlayer)] ++ (replicate 2 (Peon BluePlayer))))
