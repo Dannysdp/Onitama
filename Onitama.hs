@@ -16,7 +16,7 @@ import Data.Maybe
 
 data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Show)
 
-data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer deriving(Show)  -- tablero actual, cartas1, cartas2, carta extra y juegador
+data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer deriving(Show)  -- tablero actual, cartasR, cartasB, carta extra y juegador
 -- donde estoy la carta que uso y donde voy.
 data OnitamaAction = OnitamaAction (Integer, Integer) OnitamaCard (Integer, Integer) deriving(Eq, Show)
 
@@ -69,20 +69,20 @@ activePlayer (OnitamaGame  _ _ _ _ jugador) = jugador
 --La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posibles movimientos para el estado de juego dado. Sino la lista debe estar vacía.
 actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
 actions game@(OnitamaGame tablero cartasR cartasA cartasE jugador) = [(RedPlayer, if jugador == RedPlayer then actionsRed else []), (BluePlayer, if jugador == BluePlayer then actionsBlue else [])]
-    where actionsRed = recorrerTablero game 0 crearMov
-          actionsBlue = recorrerTablero game 0 crearMov
+    where actionsRed = recorrerTablero game 0 
+          actionsBlue = recorrerTablero game 0 
 
-recorrerTablero :: OnitamaGame -> Integer -> (a -> Integer -> [b]) -> [OnitamaAction]
-recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE jugador) pos funcion
+recorrerTablero :: OnitamaGame -> Integer -> [OnitamaAction]
+recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE jugador) pos 
  |pos == 24 = []
- |(tablero!!(fromIntegral pos)) == (Peon jugador) || (tablero!!(fromIntegral pos)) == (Maestro jugador) = funcion game pos ++ recorrerTablero game (pos+1)
- |otherwise = recorrerTablero game (pos+1) funcion
+ |(tablero!!(fromIntegral pos)) == (Peon jugador) || (tablero!!(fromIntegral pos)) == (Maestro jugador) = crearMov game pos ++ recorrerTablero game (pos+1) 
+ |otherwise = recorrerTablero game (pos+1) 
 
--- crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> OnitamaPlayer -> [OnitamaAction]
 crearMov :: OnitamaGame -> Integer ->  [OnitamaAction]
-crearMov _ 24 = []
-crearMov game@(OnitamaGame t@(Tablero tablero) cR cB cE j) pos =(movimientosPosibles (posACord pos) (cartaATupla carta) t carta j) ++ crearMov game pos
-   where (carta:baraja) = cartasJugador game 
+crearMov game@(OnitamaGame t@(Tablero tablero) [] [] cE j) _ = []
+crearMov game@(OnitamaGame t@(Tablero tablero) (cartaR:cR) (cartaB:cB) cE j) pos
+ |j == RedPlayer = (movimientosPosibles (posACord pos) (cartaATupla cartaR) t cartaR j) ++ crearMov (OnitamaGame t cR cB cE j) pos
+ |j == BluePlayer = (movimientosPosibles (posACord pos) (cartaATupla cartaB) t cartaB j) ++ crearMov (OnitamaGame t cR cB cE j) pos
 
 
 --antes movimientos 
@@ -95,14 +95,20 @@ movimientosPosibles (x,y) ((a,b):lista) tablero carta jugador
 
  -- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
 next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
-next game@(OnitamaGame table c cz ce j) jugador accion
+next game@(OnitamaGame table c cz ce j) jugador accion@(OnitamaAction _ cu _)
  | activePlayer game /= jugador = error "No puede jugar dos veces seguidas"
- | elem accion (recorrerTablero game 0 crearMov) == False = error "No se puede realizar ese movimiento!" 
- | elem accion (recorrerTablero game 0 crearMov) = OnitamaGame (actualizoTablero table accion) c cz ce (otroPlayer jugador)
+ | elem accion (recorrerTablero game 0) == False = error "No se puede realizar ese movimiento!" 
+ | (jugador == BluePlayer && elem accion (recorrerTablero game 0)) = OnitamaGame (actualizoTablero table accion) c (fst cblue) (snd cblue) (otroPlayer jugador)
+  | (jugador == RedPlayer && elem accion (recorrerTablero game 0)) = OnitamaGame (actualizoTablero table accion) c (fst cred) (snd cred) (otroPlayer jugador)
  | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
-
+   where cred = cambioCartas cu c ce
+         cblue = cambioCartas cu cz ce
+   
 deck = [Tiger , Dragon , Frog , Rabbit , Crab , Elephant , Goose , Rooster , Monkey , Mantis , Horse , Ox , Crane , Boar , Eel , Cobra]
 
+-- recibe (en orden) carta usada, mano actual, carta extra, devuelve (manoNueva, cartaExtra)
+cambioCartas :: OnitamaCard -> [OnitamaCard] -> [OnitamaCard] -> ([OnitamaCard],[OnitamaCard])
+cambioCartas cu cj ce = ((ce++[x | x <- cj, x /= cu]), [cu]) 
 
 result :: OnitamaGame -> [GameResult OnitamaPlayer]
 result game = []  
@@ -153,7 +159,11 @@ puedeMovAsi :: (Integer, Integer) -> OnitamaCard -> (Integer, Integer) -> Tabler
 puedeMovAsi (x,y) c (xf,yf) t@(Tablero lista) = xf >= 0 && xf <5 && yf >= 0 && yf <5 && not (sonDelMismo (piezaAJugador (lista!!(fromIntegral(cordAPos(x,y))))) (piezaAJugador (lista!!( fromIntegral(cordAPos(xf,yf))))))
 
 sonDelMismo :: Maybe OnitamaPlayer -> Maybe OnitamaPlayer -> Bool
-sonDelMismo p pz = if (isJust p) && (isJust pz) then 
+sonDelMismo p pz 
+ | (isJust p && isJust pz) = p == pz
+ | (isJust p && not (isJust pz)) = False 
+ | (not (isJust p) && isJust pz) =  False
+ | otherwise = True
 
 piezaAJugador :: Pieza -> Maybe OnitamaPlayer
 piezaAJugador (Peon j) = Just j
