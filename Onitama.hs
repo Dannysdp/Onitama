@@ -16,7 +16,7 @@ import Data.Maybe (fromMaybe)
 
 data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Show)
 
-data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer deriving(Show)  -- tablero actual, cartas1, cartas2, carta extra y juegador
+data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer deriving(Show)  -- tablero actual, cartas1, cartas2, carta extra y jugador
 -- donde estoy la carta que uso y donde voy.
 data OnitamaAction = OnitamaAction (Integer, Integer) OnitamaCard (Integer, Integer) deriving(Show)
 
@@ -102,7 +102,7 @@ result :: OnitamaGame -> [GameResult OnitamaPlayer]
 result game = []
 
 showGame :: OnitamaGame -> String
-showGame g = show g --TODO
+showGame (OnitamaGame (tablero cartasO cartasT extra jugador)) = (tablero ++ "El jugador A tiene las cartas: " ++ cartasO ++" el jugador B tiene las cartas: " cartasT ++ " la carta extra es: " ++ extra ++ " el siguiente jugador en mover es: " ++ jugador)
 
 showAction :: OnitamaAction -> String
 showAction (OnitamaAction (a,b) card (c,d)) = ("Mueve desde la posicon (" ++ show a ++ "," ++ show b ++ "), con la carta " ++ show card ++ ", hacia (" ++show c ++","++ show d ++ ")")
@@ -110,7 +110,7 @@ showAction (OnitamaAction (a,b) card (c,d)) = ("Mueve desde la posicon (" ++ sho
 -- "(OnitamaAction (posicion incial x, posicion incial y) carta (posicion final x, posicion final y))"
 
 readAction :: String -> OnitamaAction
-readAction texto = (OnitamaAction (1,1) Tiger (1,0)) --TODO
+readAction texto = (OnitamaAction (1,1) Tiger (1,0))
 
 players :: [OnitamaPlayer]
 players = []
