@@ -125,7 +125,7 @@ posACord pos = (pos - 5 * (div pos 5), div pos 5)
 --Retorna maybe tablero, nothing en caso de que no se pueda realizar la accion, tablero en caso de que si.
 
 actualizoTablero :: Tablero -> OnitamaAction -> Maybe Tablero
-actualizoTablero t mov@(OnitamaAction (x,y) c (a,b)) = if (esMovValido (x,y) c t) then Just (modificoLista cordAPos (x+a,y+b)) t!!(cordAPos(x,y)) t) else Nothing
+actualizoTablero t mov@(OnitamaAction (x,y) c (a,b)) = if (esMovValido (x,y) c t) then Just (modificoLista cordAPos (x+a,y+b) t!!(cordAPos(x,y))) t else Nothing
 
 modificoLista :: Integer -> a -> [a] -> [a]
 modificoLista _ _ [] = []
@@ -142,7 +142,7 @@ cartasJugador :: OnitamaGame -> [OnitamaCard]
 cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador == RedPlayer then cartasR else cartasA 
 
 puedeMovAsi :: (Integer, Integer) -> (Integer, Integer) -> Tablero -> Bool
-puedeMovAsi (x,y) (xc,yc) (Tablero t) = (x+xc)>=0 && (y+yc)>=0 && (xc+x)<5 && (yc+y)<5 && (piezaJugador $ t!!(fromIntegral(cordAPos(x,y)))) /= (piezaJugador $ t!!(fromIntegral(cordAPos(xc,yc)))) 
+puedeMovAsi (x,y) (xc,yc) (Tablero t) = (x+xc)>=0 && (y+yc)>=0 && (xc+x)<5 && (yc+y)<5 && (piezaJugador  (t!!(fromIntegral(cordAPos(x,y))))) /= (piezaJugador (t!!(fromIntegral(cordAPos(xc,yc))))) 
 
 esMovValido :: OnitamaAction -> Tablero -> Bool
 esMovValido (OnitamaAction (x,y) c (xf,yf)) t = (elem ((xf-x), (yf-y)) (cartaATupla c)) && puedeMovAsi (x,y) (xf-x,yf-y) t
