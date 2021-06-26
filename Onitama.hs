@@ -105,7 +105,7 @@ showGame :: OnitamaGame -> String
 showGame g = show g --TODO
 
 showAction :: OnitamaAction -> String
-showAction (a, b) card (c, d) = print ("El jugador A esta en " ++ show a ++ show b ++ " la carta es " ++ card ++ show c ++ show d)
+showAction OnitamaAction ((a,b) card (c,d)) = print (show a ++ show b ++ card ++ show c ++ show d)
    
 readAction :: String -> OnitamaAction
 readAction texto = (OnitamaAction (1,1) Tiger (1,0)) --TODO (OnitamaAction (int,int) carta (int,int)) 
