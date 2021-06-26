@@ -77,7 +77,7 @@ recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE ju
  |pos == 24 = []
  |(tablero!!(fromIntegral pos)) == (Peon jugador) || (tablero!!(fromIntegral pos)) == (Maestro jugador) = crearMov game pos ++ recorrerTablero game (pos+1)
  |otherwise = recorrerTablero game (pos+1) crearMov
-
+ 
 -- crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> OnitamaPlayer -> [OnitamaAction]
 crearMov :: OnitamaGame -> Integer ->  [OnitamaAction]
 crearMov _ 24 = []
