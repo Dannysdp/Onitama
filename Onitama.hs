@@ -75,9 +75,9 @@ actions game@(OnitamaGame tablero cartasR cartasA cartasE jugador) = [(RedPlayer
 recorrerTablero :: OnitamaGame -> Integer -> (a -> Integer -> [b]) -> [OnitamaAction]
 recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE jugador) pos funcion
  |pos == 24 = []
- |(tablero!!(fromIntegral pos)) == (Peon jugador) || (tablero!!(fromIntegral pos)) == (Maestro jugador) = crearMov game pos ++ recorrerTablero game (pos+1)
- |otherwise = recorrerTablero game (pos+1) crearMov
- 
+ |(tablero!!(fromIntegral pos)) == (Peon jugador) || (tablero!!(fromIntegral pos)) == (Maestro jugador) = funcion game pos ++ recorrerTablero game (pos+1)
+ |otherwise = recorrerTablero game (pos+1) funcion
+
 -- crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> OnitamaPlayer -> [OnitamaAction]
 crearMov :: OnitamaGame -> Integer ->  [OnitamaAction]
 crearMov _ 24 = []
@@ -153,7 +153,7 @@ puedeMovAsi :: (Integer, Integer) -> OnitamaCard -> (Integer, Integer) -> Tabler
 puedeMovAsi (x,y) c (xf,yf) t@(Tablero lista) = xf >= 0 && xf <5 && yf >= 0 && yf <5 && not (sonDelMismo (piezaAJugador (lista!!(fromIntegral(cordAPos(x,y))))) (piezaAJugador (lista!!( fromIntegral(cordAPos(xf,yf))))))
 
 sonDelMismo :: Maybe OnitamaPlayer -> Maybe OnitamaPlayer -> Bool
-sonDelMismo p pz = ((fromMaybe Vacio p) == RedPlayer) && ((fromMaybe Vacio pz) == RedPlayer) || ((fromMaybe Vacio p) == BluePlayer) && ((fromMaybe Vacio pz) == BluePlayer)
+sonDelMismo p pz = if (isJust p) && (isJust pz) then 
 
 piezaAJugador :: Pieza -> Maybe OnitamaPlayer
 piezaAJugador (Peon j) = Just j
