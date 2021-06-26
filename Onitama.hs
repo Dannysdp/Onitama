@@ -147,7 +147,7 @@ cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador
 
 --revisa si cae en afuera del tablero o 
 puedeMovAsi :: (Integer, Integer) -> OnitamaCard -> (Integer, Integer) -> Tablero -> Bool
-puedeMovAsi (x,y) c (xf,yf) t@(Tablero lista) = xf >= 0 && xf <5 && yf >= 0 && yf <5 && not (sonDelMismo (piezaAJugador (lista!!(fromIntegral(cordAPos(x,y))))) (piezaAJugador (lista!!( fromIntegral(cordAPos(xf,yf))))))
+puedeMovAsi (x,y) c (xf,yf) t@(Tablero lista) = xf >= 0 && xf <5 && yf >= 0 && yf <5 && not (sonDelMismo (lista!!(fromIntegral(cordAPos(x,y)))) (piezaAJugador (lista!!( fromIntegral(cordAPos(xf,yf))))))
 
 sonDelMismo :: Pieza -> Pieza -> Bool  
 sonDelMismo p pz = (fromMaybe Vacio p) == RedPlayer)) && (fromMaybe Vacio pz) == RedPlayer)) (fromMaybe Vacio p) == BluePlayer)) && (fromMaybe Vacio pz) == BluePlayer))
