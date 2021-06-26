@@ -69,18 +69,21 @@ activePlayer (OnitamaGame  _ _ _ _ jugador) = jugador
 --La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posibles movimientos para el estado de juego dado. Sino la lista debe estar vacía.
 actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
 actions game@(OnitamaGame tablero cartasR cartasA cartasE jugador) = [(RedPlayer, if jugador == RedPlayer then actionsRed else []), (BluePlayer, if jugador == BluePlayer then actionsBlue else [])]
-    where actionsRed = recorrerTablero game 0
-          actionsBlue = recorrerTablero game 0
+    where actionsRed = recorrerTablero game 0 crearMov
+          actionsBlue = recorrerTablero game 0 crearMov
 
-recorrerTablero :: OnitamaGame -> Integer -> [OnitamaAction]
-recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE jugador) pos
+recorrerTablero :: OnitamaGame -> Integer -> (a -> Integer -> [b]) -> [OnitamaAction]
+recorrerTablero game@(OnitamaGame t@(Tablero tablero) cartasR cartasA cartasE jugador) pos funcion
  |pos == 24 = []
- |(tablero!!(fromIntegral pos)) == (Peon jugador) || (tablero!!(fromIntegral pos)) == (Maestro jugador) = crearMov (tablero!!(fromIntegral pos)) t pos (cartasJugador game) jugador ++ recorrerTablero game (pos+1)
- |otherwise = recorrerTablero game (pos+1)
+ |(tablero!!(fromIntegral pos)) == (Peon jugador) || (tablero!!(fromIntegral pos)) == (Maestro jugador) = crearMov game pos ++ recorrerTablero game (pos+1)
+ |otherwise = recorrerTablero game (pos+1) crearMov
 
-crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> OnitamaPlayer -> [OnitamaAction]
-crearMov _ _ _ [] _ = []
-crearMov pieza t@(Tablero tablero) pos (carta:baraja) jugador = (movimientosPosibles (posACord pos) (cartaATupla carta) t carta jugador) ++ crearMov pieza t pos baraja jugador
+-- crearMov :: Pieza -> Tablero -> Integer -> [OnitamaCard] -> OnitamaPlayer -> [OnitamaAction]
+crearMov :: OnitamaGame -> Integer ->  [OnitamaAction]
+crearMov _ 24 = []
+crearMov game@(OnitamaGame t@(Tablero tablero) cR cB cE j) pos =(movimientosPosibles (posACord pos) (cartaATupla carta) t carta j) ++ crearMov game pos
+   where (carta:baraja) = cartasJugador game 
+
 
 --antes movimientos 
 movimientosPosibles :: (Integer,Integer) -> [(Integer,Integer)] -> Tablero -> OnitamaCard -> OnitamaPlayer -> [OnitamaAction] 
@@ -94,15 +97,15 @@ movimientosPosibles (x,y) ((a,b):lista) tablero carta jugador
 next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
 next game@(OnitamaGame table c cz ce j) jugador accion
  | activePlayer game /= jugador = error "No puede jugar dos veces seguidas"
- | elem accion (recorrerTablero game 0) == False = error "No se puede realizar ese movimiento!" 
- | elem accion (recorrerTablero game 0) = OnitamaGame (actualizoTablero table accion) c cz ce (otroPlayer jugador)
+ | elem accion (recorrerTablero game 0 crearMov) == False = error "No se puede realizar ese movimiento!" 
+ | elem accion (recorrerTablero game 0 crearMov) = OnitamaGame (actualizoTablero table accion) c cz ce (otroPlayer jugador)
  | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
 
 deck = [Tiger , Dragon , Frog , Rabbit , Crab , Elephant , Goose , Rooster , Monkey , Mantis , Horse , Ox , Crane , Boar , Eel , Cobra]
 
 
 result :: OnitamaGame -> [GameResult OnitamaPlayer]
-result game = []
+result game = []  
 
 showGame :: OnitamaGame -> String
 showGame g = show g --TODO
@@ -147,10 +150,10 @@ cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador
 
 --revisa si cae en afuera del tablero o 
 puedeMovAsi :: (Integer, Integer) -> OnitamaCard -> (Integer, Integer) -> Tablero -> Bool
-puedeMovAsi (x,y) c (xf,yf) t@(Tablero lista) = xf >= 0 && xf <5 && yf >= 0 && yf <5 && not (sonDelMismo (lista!!(fromIntegral(cordAPos(x,y)))) (piezaAJugador (lista!!( fromIntegral(cordAPos(xf,yf))))))
+puedeMovAsi (x,y) c (xf,yf) t@(Tablero lista) = xf >= 0 && xf <5 && yf >= 0 && yf <5 && not (sonDelMismo (piezaAJugador (lista!!(fromIntegral(cordAPos(x,y))))) (piezaAJugador (lista!!( fromIntegral(cordAPos(xf,yf))))))
 
-sonDelMismo :: Pieza -> Pieza -> Bool  
-sonDelMismo p pz = (fromMaybe Vacio p) == RedPlayer)) && (fromMaybe Vacio pz) == RedPlayer)) (fromMaybe Vacio p) == BluePlayer)) && (fromMaybe Vacio pz) == BluePlayer))
+sonDelMismo :: Maybe OnitamaPlayer -> Maybe OnitamaPlayer -> Bool
+sonDelMismo p pz = ((fromMaybe Vacio p) == RedPlayer) && ((fromMaybe Vacio pz) == RedPlayer) || ((fromMaybe Vacio p) == BluePlayer) && ((fromMaybe Vacio pz) == BluePlayer)
 
 piezaAJugador :: Pieza -> Maybe OnitamaPlayer
 piezaAJugador (Peon j) = Just j
