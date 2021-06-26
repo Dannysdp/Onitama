@@ -121,20 +121,13 @@ cordAPos (x, y) = x + y * 5
 posACord :: Integer -> (Integer, Integer)
 posACord pos = (pos - 5 * (div pos 5), div pos 5)
 
---Devuelve el jugador que posee esa pieza.
-piezaJugador :: Pieza -> OnitamaPlayer
-piezaJugador (Peon RedPlayer) = RedPlayer
-piezaJugador (Maestro RedPlayer) = RedPlayer
-piezaJugador (Peon BluePlayer) = BluePlayer
-piezaJugador (Maestro BluePlayer) = BluePlayer
-
 -- Actualiza el tablero dado, con la acción dada. (básicamente conformando la lógica del next):
 --Retorna maybe tablero, nothing en caso de que no se pueda realizar la accion, tablero en caso de que si.
 
 actualizoTablero :: Tablero -> OnitamaAction -> Tablero
-actualizoTablero t act@(OnitamaAction (x,y) c (xf,yf)) = if (esMovValido act t) then modificoLista cordAPos(x,y) Vacio (modificoLista cordAPos(xf,yf) t!!(cordAPos (x,y)) t) else t
+actualizoTablero t act@(OnitamaAction (x,y) c (xf,yf)) = if (esMovValido act t) then modificoLista cordAPos(x,y) Vacio (modificoLista cordAPos(xf,yf) (t!!(fromIntegral(cordAPos (x,y)))) t) else t
 
-modificoLista :: Integer -> Pieza -> Tablero -> Tablero
+modificoLista :: Integer -> Pieza -> [Pieza] -> Tablero
 modificoLista _ _ [] = []
 modificoLista pos val (x:xs)
  | pos == 0 = (val:xs)
@@ -154,10 +147,6 @@ puedeMovAsi (x,y) (xc,yc) (Tablero t) = (x+xc)>=0 && (y+yc)>=0 && (xc+x)<5 && (y
 esMovValido :: OnitamaAction -> Tablero -> Bool
 esMovValido (OnitamaAction (x,y) c (xf,yf)) t = (elem ((xf-x), (yf-y)) (cartaATupla c)) && puedeMovAsi (x,y) (xf-x,yf-y) t
 
-
-piezaJugador :: Pieza -> OnitamaPlayer
-piezaJugador (Peon p) = p
-piezaJugador (Maestro m) = m
 -- [(x,y)] x,y son posiciones de la matriz tablero
 cartaATupla :: OnitamaCard -> [(Integer,Integer)]
 cartaATupla (Tiger) = [(0,-1),(0,2)] 
@@ -179,9 +168,11 @@ cartaATupla (Cobra) = [(-1,1),(1,1),(-1,0)]
 
 tableroInicial = (Tablero ((replicate 2 (Peon RedPlayer)) ++ [(Maestro RedPlayer)] ++ (replicate 2 (Peon RedPlayer)) ++ (replicate 15 Vacio) ++ (replicate 2 (Peon BluePlayer)) ++ [(Maestro BluePlayer)] ++ (replicate 2 (Peon BluePlayer))))
 
-piezaAJugador :: Pieza -> OnitamaPlayer
-piezaAJugador (Peon j) = j
-piezaAJugador (Maestro j) = j
+piezaJugador :: Pieza -> OnitamaPlayer
+piezaJugador (Peon j) = j
+piezaJugador (Maestro j) = j
+
+{-
 {-- Match controller -------------------------------------------------------------------------------
 
 Código de prueba. Incluye una función para correr las partidas y dos agentes: consola y aleatorio.
@@ -267,5 +258,5 @@ runRandomMatch g = do
 -- Fin
 --Obtiene una acción a partir de un texto que puede habersido introducido por el usuario en la consola.
 -- readAction :: String -> OnitamaAction
-
+-}
 
