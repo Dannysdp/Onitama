@@ -105,7 +105,7 @@ showGame :: OnitamaGame -> String
 showGame g = show g --TODO
 
 showAction :: OnitamaAction -> String
-showAction (OnitamaAction (a,b) card (c,d)) = ("(" ++ show a ++ "," ++ show b ++ ") " ++ show card ++ " (" ++show c ++","++ show d ++ ")")
+showAction (OnitamaAction (a,b) card (c,d)) = ("Mueve desde la posicon (" ++ show a ++ "," ++ show b ++ "), con la carta " ++ show card ++ ", hacia (" ++show c ++","++ show d ++ ")")
 
 -- "(OnitamaAction (posicion incial x, posicion incial y) carta (posicion final x, posicion final y))"
 
