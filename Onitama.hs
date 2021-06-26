@@ -86,15 +86,16 @@ crearMov pieza t@(Tablero tablero) pos (carta:baraja) = if (tablero!!(fromIntegr
 movimientosPosibles :: (Integer,Integer) -> [(Integer,Integer)] -> Tablero -> OnitamaCard -> [OnitamaAction]
 movimientosPosibles (x,y) [] _ _ = []
 movimientosPosibles (x,y) ((a,b):lista) tablero carta 
- |esMovValido (x,y) carta tablero = [(OnitamaAction (x,y) carta (x+a,y+b))] ++ movimientosPosibles (x,y) lista tablero carta
+ |puedeMovAsi (x,y) (a,b) tablero = [(OnitamaAction (x,y) carta (x+a,y+b))] ++ movimientosPosibles (x,y) lista tablero carta
  |otherwise = movimientosPosibles (x,y) lista tablero carta
 
  -- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
--- next gameActual@(OnitamaGame table c cz ce _) jugador accion
---  | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
---  | (actualizoTablero table accion) == Nothing = error "No se puede realizar ese movimiento!" 
---  | (actualizoTablero table accion) /= Nothing = OnitamaGame (fromJust (actualizoTablero table accion)) c cz ce (otroPlayer jugador)
---  | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
+next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
+next game@(OnitamaGame table c cz ce j) jugador accion
+ | activePlayer game /= jugador = error "No puede jugar dos veces seguidas"
+ | esMovValido accion table == False = error "No se puede realizar ese movimiento!" 
+ | esMovValido accion table == True = OnitamaGame (actualizoTablero table accion) c cz ce (otroPlayer jugador)
+ | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
 
 deck = [Tiger , Dragon , Frog , Rabbit , Crab , Elephant , Goose , Rooster , Monkey , Mantis , Horse , Ox , Crane , Boar , Eel , Cobra]
 
@@ -108,7 +109,7 @@ showAction :: OnitamaAction -> String
 showAction a = show a --TODO
    
 readAction :: String -> OnitamaAction
-readAction texto = (OnitamaAction (1,1) Tiger (1,0)) --TODO (OnitamaAction (int,int) carta (int,int)) 
+readAction texto = (OnitamaAction (1,1) Tiger (1,0)) --TODO (OnitamaAction (int,int) carta (int,int)) "(1,1) Tiger (3,1)"
 
 players :: [OnitamaPlayer]
 players = []
@@ -124,8 +125,8 @@ posACord pos = (pos - 5 * (div pos 5), div pos 5)
 -- Actualiza el tablero dado, con la acción dada. (básicamente conformando la lógica del next):
 --Retorna maybe tablero, nothing en caso de que no se pueda realizar la accion, tablero en caso de que si.
 
--- actualizoTablero :: Tablero -> OnitamaAction -> Maybe Tablero
--- actualizoTablero t mov@(OnitamaAction (x,y) c (a,b)) = if ((esMovValido (x,y) c t) then Just (modificoLista (cordAPos (x+a,y+b)) t!!(cordAPos(x,y)) t) else Nothing
+actualizoTablero :: Tablero -> OnitamaAction -> Tablero
+actualizoTablero t act@(OnitamaAction (x,y) c (xf,yf)) = if (esMovValido act t) then modificoLista cordAPos(x,y) Vacio (modificoLista cordAPos(xf,yf) t!!(cordAPos (x,y)) t) else t
 
 modificoLista :: Integer -> a -> [a] -> [a]
 modificoLista _ _ [] = []
@@ -141,18 +142,11 @@ otroPlayer (BluePlayer) = RedPlayer
 cartasJugador :: OnitamaGame -> [OnitamaCard]
 cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador == RedPlayer then cartasR else cartasA 
 
--- Evalúa si el movimiento es válido, dadas 2 posiciones.
 puedeMovAsi :: (Integer, Integer) -> (Integer, Integer) -> Tablero -> Bool
-puedeMovAsi (x,y) (xc,yc) tablero = (x+xc)>=0 && (y+yc)>=0 && (x+xc)<5 && (y+yc)<5 &&(tablero!!(fromIntegral (cordAPos (x,y)))) /= cartaJugador (tablero!!(fromIntegral (cordAPos (x+xc,y+yc))))
+puedeMovAsi (x,y) (xc,yc) t = (x+xc)>=0 && (y+yc)>=0 && (xc+x)<5 && (yc+y)<5 && piezaJugador $ t!!(fromIntegral(cordAPos(x,y))) /= piezaJugador $ t!!(fromIntegral(cordAPos(xc,yc))) 
 
--- Evalúa para cada elemento de la lista, que sea válido, dada una posición inicial.
-esPosicionValida :: (Integer, Integer) -> [(Integer,Integer)] -> Tablero -> Bool
-esPosicionValida _ [] _ = True
-esPosicionValida posInicial (tupla:lista) t = esMovValido posInicial tupla t && esPosicionValida posInicial lista t 
-
--- Evalúa que el movimiento es válido, dada una posición inicial y una carta.
-esMovValido :: (Integer, Integer) -> OnitamaCard -> Tablero -> Bool
-esMovValido p c t = esPosicionValida p (cartaATupla c) t
+esMovValido :: OnitamaAction -> Tablero -> Bool
+esMovValido (OnitamaAction (x,y) c (xf,yf)) t = (elem ((xf-x), (yf-y)) (cartaATupla c)) && puedeMovAsi (x,y) (xf-x,yf-y) t
 
 -- [(x,y)] x,y son posiciones de la matriz tablero
 cartaATupla :: OnitamaCard -> [(Integer,Integer)]
@@ -174,6 +168,10 @@ cartaATupla (Eel) = [(-1,-1),(1,0),(1,0)]
 cartaATupla (Cobra) = [(-1,1),(1,1),(-1,0)] 
 
 tableroInicial = (Tablero ((replicate 2 (Peon RedPlayer)) ++ [(Maestro RedPlayer)] ++ (replicate 2 (Peon RedPlayer)) ++ (replicate 15 Vacio) ++ (replicate 2 (Peon BluePlayer)) ++ [(Maestro BluePlayer)] ++ (replicate 2 (Peon BluePlayer))))
+
+piezaJugador :: Pieza -> OnitamaPlayer
+piezaJugador (Peon j) = j
+piezaJugador (Maestro j) = j
 
 {-
 {-- Match controller -------------------------------------------------------------------------------
