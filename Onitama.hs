@@ -90,9 +90,8 @@ movimientosPosibles (x,y) ((a,b):lista) tablero carta
  |otherwise = movimientosPosibles (x,y) lista tablero carta
 
  -- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
-next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
-next game@(OnitamaGame table c cz ce j) jugador accion
- | activePlayer game /= jugador = error "No puede jugar dos veces seguidas"
+next gameActual@(OnitamaGame table c cz ce _) jugador accion@(OnitamaAction (x,y) cu _)
+ | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
  | esMovValido accion table == False = error "No se puede realizar ese movimiento!" 
  | esMovValido accion table == True = OnitamaGame (actualizoTablero table accion) c cz ce (otroPlayer jugador)
  | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
@@ -122,13 +121,20 @@ cordAPos (x, y) = x + y * 5
 posACord :: Integer -> (Integer, Integer)
 posACord pos = (pos - 5 * (div pos 5), div pos 5)
 
+--Devuelve el jugador que posee esa pieza.
+piezaJugador :: Pieza -> OnitamaPlayer
+piezaJugador (Peon RedPlayer) = RedPlayer
+piezaJugador (Maestro RedPlayer) = RedPlayer
+piezaJugador (Peon BluePlayer) = BluePlayer
+piezaJugador (Maestro BluePlayer) = BluePlayer
+
 -- Actualiza el tablero dado, con la acción dada. (básicamente conformando la lógica del next):
 --Retorna maybe tablero, nothing en caso de que no se pueda realizar la accion, tablero en caso de que si.
 
 actualizoTablero :: Tablero -> OnitamaAction -> Tablero
 actualizoTablero t act@(OnitamaAction (x,y) c (xf,yf)) = if (esMovValido act t) then modificoLista cordAPos(x,y) Vacio (modificoLista cordAPos(xf,yf) t!!(cordAPos (x,y)) t) else t
 
-modificoLista :: Integer -> a -> [a] -> [a]
+modificoLista :: Integer -> Pieza -> Tablero -> Tablero
 modificoLista _ _ [] = []
 modificoLista pos val (x:xs)
  | pos == 0 = (val:xs)
@@ -142,9 +148,16 @@ otroPlayer (BluePlayer) = RedPlayer
 cartasJugador :: OnitamaGame -> [OnitamaCard]
 cartasJugador (OnitamaGame tablero cartasR cartasA cartasE jugador) = if jugador == RedPlayer then cartasR else cartasA 
 
+-- Evalúa si el movimiento es válido, dadas 2 posiciones.
 puedeMovAsi :: (Integer, Integer) -> (Integer, Integer) -> Tablero -> Bool
-puedeMovAsi (x,y) (xc,yc) t = (x+xc)>=0 && (y+yc)>=0 && (xc+x)<5 && (yc+y)<5 && piezaJugador $ t!!(fromIntegral(cordAPos(x,y))) /= piezaJugador $ t!!(fromIntegral(cordAPos(xc,yc))) 
+puedeMovAsi (x,y) (xc,yc) t = (x+xc)>=0 && (y+yc)>=0 && (xc+x)<5 && (yc+y)<5 && piezaJugador t!!(fromIntegral(cordAPos(x,y))) /= piezaJugador t!!(fromIntegral(cordAPos(xc,yc))) 
 
+-- Evalúa para cada elemento de la lista, que sea válido, dada una posición inicial.
+--esPosicionValida :: (Integer, Integer) -> [(Integer,Integer)] -> Tablero -> Bool
+--esPosicionValida _ [] _ = True
+--esPosicionValida posInicial (tupla:lista) t = esMovValido posInicial tupla t && esPosicionValida --posInicial lista t 
+
+-- Evalúa que el movimiento es válido, dada una posición inicial y una carta.
 esMovValido :: OnitamaAction -> Tablero -> Bool
 esMovValido (OnitamaAction (x,y) c (xf,yf)) t = (elem ((xf-x), (yf-y)) (cartaATupla c)) && puedeMovAsi (x,y) (xf-x,yf-y) t
 
@@ -169,11 +182,9 @@ cartaATupla (Cobra) = [(-1,1),(1,1),(-1,0)]
 
 tableroInicial = (Tablero ((replicate 2 (Peon RedPlayer)) ++ [(Maestro RedPlayer)] ++ (replicate 2 (Peon RedPlayer)) ++ (replicate 15 Vacio) ++ (replicate 2 (Peon BluePlayer)) ++ [(Maestro BluePlayer)] ++ (replicate 2 (Peon BluePlayer))))
 
-piezaJugador :: Pieza -> OnitamaPlayer
-piezaJugador (Peon j) = j
-piezaJugador (Maestro j) = j
-
-{-
+piezaAJugador :: Pieza -> OnitamaPlayer
+piezaAJugador (Peon j) = j
+piezaAJugador (Maestro j) = j
 {-- Match controller -------------------------------------------------------------------------------
 
 Código de prueba. Incluye una función para correr las partidas y dos agentes: consola y aleatorio.
