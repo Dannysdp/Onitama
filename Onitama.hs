@@ -86,12 +86,13 @@ crearMov pieza t@(Tablero tablero) pos (carta:baraja) = if (tablero!!(fromIntegr
 movimientosPosibles :: (Integer,Integer) -> [(Integer,Integer)] -> Tablero -> OnitamaCard -> [OnitamaAction]
 movimientosPosibles (x,y) [] _ _ = []
 movimientosPosibles (x,y) ((a,b):lista) tablero carta 
- |esMovValido (x,y) carta tablero = [(OnitamaAction (x,y) carta (x+a,y+b))] ++ movimientosPosibles (x,y) lista tablero carta
+ |puedeMovAsi (x,y) (a,b) tablero = [(OnitamaAction (x,y) carta (x+a,y+b))] ++ movimientosPosibles (x,y) lista tablero carta
  |otherwise = movimientosPosibles (x,y) lista tablero carta
 
  -- Esta función aplica una acción sobre un estado de juego dado, y retorna el estado resultante. Se debe levantar un error si eljugador dado no es el jugador activo, si el juego está terminado, o si la acción no es realizable.
-next gameActual@(OnitamaGame table c cz ce _) jugador accion@(OnitamaAction (x,y) cu _)
- | activePlayer gameActual /= jugador = error "No puede jugar dos veces seguidas"
+next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
+next game@(OnitamaGame table c cz ce j) jugador accion
+ | activePlayer game /= jugador = error "No puede jugar dos veces seguidas"
  | esMovValido accion table == False = error "No se puede realizar ese movimiento!" 
  | esMovValido accion table == True = OnitamaGame (actualizoTablero table accion) c cz ce (otroPlayer jugador)
  | otherwise = error "No has introducido un onitamaGame. Su llamado a esta función es imposible de procesar."
@@ -108,10 +109,10 @@ showAction :: OnitamaAction -> String
 showAction a = show a --TODO
    
 readAction :: String -> OnitamaAction
-readAction texto = (OnitamaAction (1,1) Tiger (1,0)) --TODO (OnitamaAction (int,int) carta (int,int)) 
+readAction texto = (OnitamaAction (1,1) Tiger (1,0)) --TODO (OnitamaAction (int,int) carta (int,int)) "(1,1) Tiger (3,1)"
 
 players :: [OnitamaPlayer]
-players = [minBound..maxBound]
+players = []
 
 ------------------- AUXILIARES -------------------
 --cordenada a posicion
@@ -127,7 +128,7 @@ posACord pos = (pos - 5 * (div pos 5), div pos 5)
 actualizoTablero :: Tablero -> OnitamaAction -> Tablero
 actualizoTablero t act@(OnitamaAction (x,y) c (xf,yf)) = if (esMovValido act t) then modificoLista cordAPos(x,y) Vacio (modificoLista cordAPos(xf,yf) (t!!(fromIntegral(cordAPos (x,y)))) t) else t
 
-modificoLista :: Integer -> Pieza -> [Pieza] -> Tablero
+modificoLista :: Integer -> Pieza -> [Pieza] -> [Pieza]
 modificoLista _ _ [] = []
 modificoLista pos val (x:xs)
  | pos == 0 = (val:xs)
