@@ -326,6 +326,3 @@ smartAgent player state = do
        if x/=[] then return (Just (snd (x !! 0)))
        else return (Just (moves !! i))
        where x = filter (\f -> fst f==[Winner player, Loser RedPlayer] || fst f==[Winner player, Loser BluePlayer]) (resultActList state player (recorrerTablero state 0))
-
-
-
