@@ -312,8 +312,7 @@ runRandomMatch :: OnitamaGame -> IO [GameResult OnitamaPlayer]
 runRandomMatch g = do
    runMatch (randomAgent RedPlayer, randomAgent BluePlayer) g
 -- Fin
---Obtiene una acción a partir de un texto que puede habersido introducido por el usuario en la consola.
--- readAction :: String -> OnitamaAction
+
 --Extra
 smartAgent :: OnitamaPlayer -> OnitamaAgent
 smartAgent player state = do
@@ -326,3 +325,15 @@ smartAgent player state = do
        if x/=[] then return (Just (snd (x !! 0)))
        else return (Just (moves !! i))
        where x = filter (\f -> fst f==[Winner player, Loser RedPlayer] || fst f==[Winner player, Loser BluePlayer]) (resultActList state player (recorrerTablero state 0))
+
+variant :: OnitamaConfig -> OnitamaGame
+variant config = if (((configHandSize config) > 1) && ((configHandSize config) <8))
+    then beginningVariantes (configDeck config) (configHandSize config) (configStalemate config) else 
+       beginningVariantes (configDeck config) 2 (configStalemate config)
+       
+beginningVariantes:: [OnitamaCard] -> Int -> Bool -> OnitamaGame
+beginningVariantes baraja n b= (OnitamaGame tableroInicial (fst cartas1) (fst cartas2) (fst cartaE) RedPlayer b)
+    where 
+        cartas1 = (splitAt n baraja)
+        cartas2 = (splitAt n (snd cartas1))
+        cartaE = (splitAt 1 (snd cartas2))
