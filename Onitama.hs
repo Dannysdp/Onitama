@@ -11,8 +11,8 @@ module Onitama where
 import Data.Maybe (fromJust, listToMaybe)
 import Data.List (elemIndex, sort)
 import System.Random
-import Data.Maybe 
-
+import Data.Char
+import Data.Maybe
 -- Data representativa de las piezas, donde peon y maestro reciben un jugador (su dueño), mientras que vacio no (evidentemente).
 data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Show)
 
