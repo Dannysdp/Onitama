@@ -9,6 +9,7 @@ Leonardo Val, Ignacio Pacheco.
 -}
 module Onitama where
 
+import Data.Char
 import Data.Maybe (fromJust, listToMaybe)
 import Data.List (elemIndex, sort)
 import System.Random
@@ -16,7 +17,7 @@ import Data.Maybe
 
 data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Show)
 
-data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer deriving(Show)  -- tablero actual, cartasR, cartasB, carta extra y juegador
+data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer deriving(Show)  -- tablero actual, cartas1, cartas2, carta extra y jugador
 -- donde estoy la carta que uso y donde voy.
 data OnitamaAction = OnitamaAction (Integer, Integer) OnitamaCard (Integer, Integer) deriving(Eq, Show)
 
@@ -97,14 +98,35 @@ result game@(OnitamaGame t@(Tablero tablero) _ _ _ _)
  |not $ elem (Maestro BluePlayer) tablero = [Winner RedPlayer]
  |otherwise = [] 
 
-showGame :: OnitamaGame -> String
-showGame g = show g --TODO
+-- showGame :: OnitamaGame -> String
+-- showGame (OnitamaGame (tablero cartasO cartasT extra jugador)) = (tablero ++ "El jugador A tiene las cartas: " ++ cartasO ++" el jugador B tiene las cartas: " cartasT ++ " la carta extra es: " ++ extra ++ " el siguiente jugador en mover es: " ++ jugador)
 
 showAction :: OnitamaAction -> String
-showAction a = show a --TODO
-   
+showAction (OnitamaAction (a,b) card (c,d)) = ("Mueve desde la posicon (" ++ show a ++ "," ++ show b ++ "), con la carta " ++ show card ++ ", hacia (" ++show c ++","++ show d ++ ")")
+
+-- "(OnitamaAction (posicion incial x, posicion incial y) carta (posicion final x, posicion final y))"
+
 readAction :: String -> OnitamaAction
-readAction texto = (OnitamaAction (1,1) Tiger (1,0)) --TODO (OnitamaAction (int,int) carta (int,int)) "(1,1) Tiger (3,1)"
+readAction texto = (OnitamaAction tupla carta tupla2)
+   where 
+      tupla = let lista = (readAuxiliar texto [] []) in ((fst lista)!!0,(fst lista)!!1)
+      carta = (let lista = (readAuxiliar texto [] []) in (stringToCard (snd lista)))
+      tupla2 = (let lista = (readAuxiliar texto [] []) in ((fst lista)!!2,(fst lista)!!3))
+
+stringToCard :: String -> OnitamaCard
+stringToCard texto 
+ |texto == "Tiger" = (Tiger) 
+ |otherwise = (Frog)
+
+readAuxiliar :: String -> [Integer] -> String -> ([Integer],String)
+readAuxiliar [] numero carta = (numero,carta)
+readAuxiliar (c:texto) numero carta 
+ |isDigit c = readAuxiliar texto (numero++[fromIntegral(digitToInt c)]) carta
+ |isAlpha c = readAuxiliar texto numero (c:carta)
+ |otherwise = readAuxiliar texto numero carta 
+
+--digits :: a -> a
+--digits as = if (isDigit (head as)) then takeWhile isDigit as else drop 1 (as) || digits
 
 players :: [OnitamaPlayer]
 players = []
