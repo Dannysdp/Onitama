@@ -306,10 +306,6 @@ Como lo dice su nombre, es el tablero inicial. Es una constante, ya que siempre 
 tableroInicial :: Tablero
 tableroInicial = (Tablero ((replicate 2 (Peon RedPlayer)) ++ [(Maestro RedPlayer)] ++ (replicate 2 (Peon RedPlayer)) ++ (replicate 15 Vacio) ++ (replicate 2 (Peon BluePlayer)) ++ [(Maestro BluePlayer)] ++ (replicate 2 (Peon BluePlayer))))
 
-{- Función que devuelve una lista con los 2 jugadores posibles. Bastante simple.
--}
-players :: [OnitamaPlayer]
-players = [BluePlayer,RedPlayer]
 
 {-- Match controller -------------------------------------------------------------------------------
 Código de prueba. Incluye una función para correr las partidas y dos agentes: consola y aleatorio.
@@ -339,6 +335,8 @@ runGame ags = do
 {- El agente de consola ´consoleAgent´ muestra el estado de juego y los movimientos disponibles por
 consola, y espera una acción por entrada de texto.
 -}
+players :: [OnitamaPlayer]
+players = [BluePlayer,RedPlayer]
 
 consoleAgent :: OnitamaPlayer -> OnitamaAgent
 consoleAgent player state = do
