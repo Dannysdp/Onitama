@@ -13,11 +13,6 @@ import Data.List (elemIndex, sort)
 import System.Random
 import Data.Char
 import Data.Maybe
--- Data representativa de las piezas, donde peon y maestro reciben un jugador (su dueño), mientras que vacio no (evidentemente).
-data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Show)
-
--- Data representativa de el juego en sí, construída con: Tablero [cartas_azul] [cartas_rojo] [carta_extra] jugador_actual.
-data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer Bool  -- tablero actual, cartasR, cartasB, carta extra y juegador
 
 -- Data representativa de las acciones del juego, construída con: (pos_inicial_x , pos_inicial_y, pos_final_x, pos_final_y)
 data OnitamaAction = OnitamaAction (Integer, Integer) OnitamaCard (Integer, Integer) deriving(Eq, Show)
@@ -25,14 +20,20 @@ data OnitamaAction = OnitamaAction (Integer, Integer) OnitamaCard (Integer, Inte
 --Data representativa de las cartas del juego (constructores vacíos, las tuplas que representan sus movimientos son funciones auxiliares deterministas).
 data OnitamaCard = Tiger | Dragon | Frog | Rabbit | Crab | Elephant | Goose | Rooster | Monkey | Mantis | Horse | Ox | Crane | Boar | Eel | Cobra deriving(Show, Eq)
 
---Data representativa del tablero del juego (valga la redundancia).
-data Tablero = Tablero [Pieza] deriving(Show)
-
 --Data representativa de un jugador del juego (rojo o azul).
 data OnitamaPlayer = RedPlayer | BluePlayer deriving(Eq, Show, Enum)
 
+-- Data representativa de el juego en sí, construída con: Tablero [cartas_azul] [cartas_rojo] [carta_extra] jugador_actual.
+data OnitamaGame = OnitamaGame Tablero [OnitamaCard] [OnitamaCard] [OnitamaCard] OnitamaPlayer Bool  -- tablero actual, cartasR, cartasB, carta extra y juegador
+
 --Data representativa del resultado del juego (ganador y perdedor, donde p es un jugador).
 data GameResult p = Winner p | Loser p deriving(Eq, Show)
+
+-- Data representativa de las piezas, donde peon y maestro reciben un jugador (su dueño), mientras que vacio no (evidentemente).
+data Pieza = Peon OnitamaPlayer | Maestro OnitamaPlayer | Vacio deriving (Eq,Show)
+
+--Data representativa del tablero del juego.
+data Tablero = Tablero [Pieza] deriving(Show)
 
 --Data para variantes EXTRA
 data OnitamaConfig = OnitamaConfig { configDeck :: [OnitamaCard], configHandSize :: Int, configStalemate :: Bool} deriving (Eq, Show)
